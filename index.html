@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dankedin - Pokémon Roguelike</title>
+    <title>DankedIn - Pokémon Roguelike</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -11,7 +11,7 @@
         <div class="app-container">
             <!-- Top Navigation Bar -->
             <div class="top-nav">
-                <h1 class="nav-title">dankedin</h1>
+                <h1 class="nav-title">DankedIn</h1>
                 <button class="restart-btn" id="restartBtn" title="Restart Game">
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
                         <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8"></path>
@@ -28,7 +28,7 @@
                 <div class="opponent-info" id="opponentInfo">
                     <div class="pokemon-info-bar">
                         <div class="pokemon-name-row">
-                            <span class="pokemon-name" id="opponentName">Fennekin</span>
+                            <span class="pokemon-name" id="opponentName">Google</span>
                             <span class="gender-symbol" id="opponentGender">♂</span>
                             <span class="pokemon-level">Lv. <span id="opponentLevel">7</span></span>
                         </div>
@@ -37,9 +37,6 @@
                                 <div class="hp-fill" id="opponentHpFill"></div>
                             </div>
                             <span class="hp-text" id="opponentHpText">HP 20/20</span>
-                        </div>
-                        <div class="mp-bar-container">
-                            <span class="mp-text" id="opponentMpText">MP 15/15</span>
                         </div>
                     </div>
                 </div>
@@ -53,13 +50,15 @@
                     <div class="player-pokemon-sprite" id="playerSprite">
                         <div class="pokemon-placeholder"></div>
                     </div>
+                    <!-- Pokéball for throwing animation -->
+                    <div class="pokeball" id="pokeball" style="display: none;"></div>
                 </div>
 
                 <!-- Player Info -->
                 <div class="player-info" id="playerInfo">
                     <div class="pokemon-info-bar">
                         <div class="pokemon-name-row">
-                            <span class="pokemon-name" id="playerName">Purrloin</span>
+                            <span class="pokemon-name" id="playerName">Y Combinator</span>
                             <span class="gender-symbol" id="playerGender">♀</span>
                             <span class="pokemon-level">Lv. <span id="playerLevel">4</span></span>
                         </div>
@@ -68,9 +67,6 @@
                                 <div class="hp-fill" id="playerHpFill"></div>
                             </div>
                             <span class="hp-text" id="playerHpText">HP 18/18</span>
-                        </div>
-                        <div class="mp-bar-container">
-                            <span class="mp-text" id="playerMpText">MP 12/12</span>
                         </div>
                         <div class="exp-bar-container">
                             <div class="exp-bar">
@@ -88,19 +84,19 @@
                 <div class="commentating-section" id="commentatingSection">
                     <div class="commentating-text" id="commentatingText"></div>
                 </div>
-                <div class="action-prompt" id="actionPrompt">What will <span id="promptPokemonName">Purrloin</span> do?</div>
+                <div class="action-prompt" id="actionPrompt">What will <span id="promptPokemonName">Y Combinator</span> do?</div>
                 <div class="action-buttons">
                     <button class="action-btn" id="fightBtn" data-action="fight">
-                        <span class="action-cursor">▶</span> Fight
+                        <span class="action-cursor">▶</span> Use Skills
                     </button>
                     <button class="action-btn" id="ballBtn" data-action="ball">
-                        <span class="action-cursor">▶</span> Ball
+                        <span class="action-cursor">▶</span> Apply to job
                     </button>
                     <button class="action-btn" id="pokemonBtn" data-action="pokemon">
-                        <span class="action-cursor">▶</span> Pokémon
+                        <span class="action-cursor">▶</span> My Resume
                     </button>
                     <button class="action-btn" id="runBtn" data-action="run">
-                        <span class="action-cursor">▶</span> Run
+                        <span class="action-cursor">▶</span> Skip this Job
                     </button>
                 </div>
             </div>
@@ -141,7 +137,7 @@
             <!-- Start Game Screen -->
             <div class="start-overlay" id="startOverlay">
                 <div class="start-content">
-                    <h1 class="start-title">dankedin</h1>
+                    <h1 class="start-title">DankedIn</h1>
                     <p class="start-subtitle">Pokémon Roguelike</p>
                     <div class="start-description">
                         <p>Battle wild Pokémon in this roguelike adventure!</p>

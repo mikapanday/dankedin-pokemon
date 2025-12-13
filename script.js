@@ -1,10 +1,11 @@
 // UI Controller and Event Handlers
 
 let gameState = new GameState();
-let currentActionCursor = 0;
+let currentActionCursor = -1; // -1 means no button selected initially
 let currentMoveCursor = 0;
 let currentPartyCursor = 0;
 let isProcessing = false;
+let typingTimeout = null; // Track typing effect timeout
 
 // Initialize game
 document.addEventListener('DOMContentLoaded', () => {
@@ -15,6 +16,12 @@ document.addEventListener('DOMContentLoaded', () => {
 
 // Typing effect function
 function typeText(element, text, speed = 30, callback = null) {
+    // Clear any existing typing effect
+    if (typingTimeout) {
+        clearTimeout(typingTimeout);
+        typingTimeout = null;
+    }
+    
     element.textContent = '';
     let index = 0;
     
@@ -22,8 +29,9 @@ function typeText(element, text, speed = 30, callback = null) {
         if (index < text.length) {
             element.textContent += text.charAt(index);
             index++;
-            setTimeout(type, speed);
+            typingTimeout = setTimeout(type, speed);
         } else {
+            typingTimeout = null;
             if (callback) callback();
         }
     }
@@ -39,7 +47,14 @@ function showBattleStartMessage() {
     if (!battle) return;
     
     const player = gameState.getCurrentPlayerPokemon();
-    const message = `A wild ${battle.opponent.name} appears! What will ${player.name} do?`;
+    const opponent = battle.opponent;
+    const role = opponent.role || 'Employee';
+    const opponentCompany = opponent.name;
+    const playerCompany = player.name;
+    
+    // Use "An" for roles starting with vowels, "A" for consonants
+    const article = /^[aeiouAEIOU]/.test(role) ? 'An' : 'A';
+    const message = `${article} ${role} from ${opponentCompany} appears! What can you do with ${playerCompany} experience with ${opponentCompany}?`;
     
     typeText(commentatingText, message, 30);
 }
@@ -56,6 +71,75 @@ function showBattleMessage(text, callback = null, speed = 30) {
     // Replace newlines with spaces for single-line display
     const singleLineText = text.replace(/\n/g, ' ');
     typeText(commentatingText, singleLineText, speed, callback);
+}
+
+// Animate XP gain with meter animation
+function animateExpGain(expData, callback) {
+    const player = gameState.getCurrentPlayerPokemon();
+    const expBar = document.getElementById('playerExpFill');
+    const expText = document.getElementById('playerExpText');
+    
+    // Show XP gain message in commentary
+    const xpMessage = `${player.name} gained ${expData.expGain} EXP!`;
+    showBattleMessage(xpMessage, () => {
+        // Animate XP bar filling up
+        const oldExpPercent = (expData.oldExp / player.expToNext) * 100;
+        const newExpPercent = Math.min(100, (expData.newExp / player.expToNext) * 100);
+        
+        // Actually add the XP to the player
+        player.exp = expData.newExp;
+        
+        // Animate the bar from old to new
+        let currentPercent = oldExpPercent;
+        const targetPercent = newExpPercent;
+        const duration = 1500; // 1.5 seconds
+        const startTime = Date.now();
+        
+        function animate() {
+            const elapsed = Date.now() - startTime;
+            const progress = Math.min(1, elapsed / duration);
+            
+            // Easing function for smooth animation
+            const easeOut = 1 - Math.pow(1 - progress, 3);
+            currentPercent = oldExpPercent + (targetPercent - oldExpPercent) * easeOut;
+            
+            const currentExp = Math.floor(expData.oldExp + (expData.newExp - expData.oldExp) * easeOut);
+            
+            expBar.style.width = `${currentPercent}%`;
+            expText.textContent = `EXP ${currentExp}/${player.expToNext}`;
+            
+            if (progress < 1) {
+                requestAnimationFrame(animate);
+            } else {
+                // Animation complete
+                expBar.style.width = `${newExpPercent}%`;
+                expText.textContent = `EXP ${expData.newExp}/${player.expToNext}`;
+                updateUI();
+                if (callback) callback();
+            }
+        }
+        
+        animate();
+    });
+}
+
+// Trigger damage flash animation on Pokémon sprite
+function triggerDamageAnimation(isPlayer) {
+    const spriteId = isPlayer ? 'playerSprite' : 'opponentSprite';
+    const sprite = document.getElementById(spriteId);
+    const placeholder = sprite.querySelector('.pokemon-placeholder');
+    
+    if (sprite && placeholder) {
+        // Add damaged class to both sprite and placeholder
+        sprite.classList.add('damaged');
+        placeholder.classList.add('damaged');
+        
+        // Remove classes after animation completes
+        setTimeout(() => {
+            sprite.classList.remove('damaged');
+            placeholder.classList.remove('damaged');
+        }, 600); // Match animation duration
+    }
 }
 
 function setupEventListeners() {
@@ -194,12 +278,18 @@ function updateActionMenuCursor() {
     buttons.forEach((btn, index) => {
         if (index === currentActionCursor) {
             btn.classList.add('selected');
-            btn.querySelector('.action-cursor').textContent = '▶';
+            // Cursor visibility is handled by CSS (.action-btn.selected .action-cursor)
         } else {
             btn.classList.remove('selected');
-            btn.querySelector('.action-cursor').textContent = ' ';
         }
     });
+    
+    // If no button is selected, ensure all are unselected
+    if (currentActionCursor === -1) {
+        buttons.forEach((btn) => {
+            btn.classList.remove('selected');
+        });
+    }
 }
 
 function updateMoveMenuCursor() {
@@ -309,21 +399,43 @@ function selectMove(moveIndex) {
     
     // Player's turn
     const result = gameState.useMove(player, opponent, moveIndex);
+    
+    // Trigger damage animation if damage was dealt (trigger immediately)
+    if (result.success && result.damage !== undefined && result.damage > 0) {
+        setTimeout(() => triggerDamageAnimation(false), 100); // Opponent takes damage, slight delay for message
+    }
+    
     showBattleMessage(result.message, () => {
         updateUI();
         
         // Check if battle ended
         const battleResult = gameState.checkBattleEnd();
-        if (battleResult === 'opponentDefeated' || battleResult === 'opponentDefeatedLevelUp') {
+        
+        // Handle battle result object (for XP gain) or string (for other results)
+        if (battleResult && typeof battleResult === 'object' && (battleResult.result === 'opponentDefeated' || battleResult.result === 'opponentDefeatedLevelUp')) {
             let message = `You defeated ${opponent.name}!`;
-            if (battleResult === 'opponentDefeatedLevelUp') {
-                message += ` ${player.name} grew to Level ${player.level}!`;
-            }
             showBattleMessage(message, () => {
-                gameState.startNewBattle();
-                updateUI();
-                showBattleStartMessage();
-                isProcessing = false;
+                // Show XP gain animation
+                animateExpGain(battleResult, () => {
+                    if (battleResult.leveledUp) {
+                        const oldLevel = player.level;
+                        player.level++;
+                        player.exp -= player.expToNext;
+                        player.expToNext = player.expToNext * 1.5;
+                        player.currentHP = player.maxHP;
+                        showBattleMessage(`${player.name} grew from Level ${oldLevel} to Level ${player.level}!`, () => {
+                            gameState.startNewBattle();
+                            updateUI();
+                            showBattleStartMessage();
+                            isProcessing = false;
+                        });
+                    } else {
+                        gameState.startNewBattle();
+                        updateUI();
+                        showBattleStartMessage();
+                        isProcessing = false;
+                    }
+                });
             });
             return;
         }
@@ -348,11 +460,47 @@ function selectMove(moveIndex) {
         setTimeout(() => {
             const enemyMoveIndex = gameState.enemyChooseBestMove();
             const enemyResult = gameState.useMove(opponent, player, enemyMoveIndex);
+            
+            // Trigger damage animation if damage was dealt (trigger immediately)
+            if (enemyResult.success && enemyResult.damage !== undefined && enemyResult.damage > 0) {
+                setTimeout(() => triggerDamageAnimation(true), 100); // Player takes damage, slight delay for message
+            }
+            
             showBattleMessage(enemyResult.message, () => {
                 updateUI();
                 
                 // Check battle end again
                 const battleResult2 = gameState.checkBattleEnd();
+                
+                // Handle battle result object or string
+                if (battleResult2 && typeof battleResult2 === 'object' && (battleResult2.result === 'opponentDefeated' || battleResult2.result === 'opponentDefeatedLevelUp')) {
+                    let message = `You defeated ${opponent.name}!`;
+                    showBattleMessage(message, () => {
+                        // Show XP gain animation
+                        animateExpGain(battleResult2, () => {
+                            if (battleResult2.leveledUp) {
+                                const oldLevel = player.level;
+                                player.level++;
+                                player.exp -= player.expToNext;
+                                player.expToNext = player.expToNext * 1.5;
+                                player.currentHP = player.maxHP;
+                                showBattleMessage(`${player.name} grew from Level ${oldLevel} to Level ${player.level}!`, () => {
+                                    gameState.startNewBattle();
+                                    updateUI();
+                                    showBattleStartMessage();
+                                    isProcessing = false;
+                                });
+                            } else {
+                                gameState.startNewBattle();
+                                updateUI();
+                                showBattleStartMessage();
+                                isProcessing = false;
+                            }
+                        });
+                    });
+                    return;
+                }
+                
                 if (battleResult2 === 'playerLost') {
                     showBattleMessage("All your Pokémon fainted! Game Over!", () => {
                         showResults('defeat');
@@ -379,16 +527,121 @@ function handleBallAction() {
     if (isProcessing) return;
     
     isProcessing = true;
-    const result = gameState.attemptCatch();
-    showMessage(result.message, () => {
-        if (result.success) {
-            gameState.startNewBattle();
-            updateUI();
-            showBattleStartMessage();
-        }
-        updateUI();
-        isProcessing = false;
-    });
+    
+    const player = gameState.getCurrentPlayerPokemon();
+    const opponent = gameState.getOpponentPokemon();
+    
+    // Show ball throwing animation
+    const pokeball = document.getElementById('pokeball');
+    pokeball.style.display = 'block';
+    pokeball.classList.add('throwing');
+    
+    // After throw animation completes, add blinking effect
+    setTimeout(() => {
+        pokeball.classList.remove('throwing');
+        pokeball.classList.add('blinking');
+        
+        // After blinking for dramatic effect, attempt catch
+        setTimeout(() => {
+            pokeball.style.display = 'none';
+            pokeball.classList.remove('blinking');
+            
+            const result = gameState.attemptCatch();
+            showBattleMessage(result.message, () => {
+                if (result.success) {
+                    gameState.startNewBattle();
+                    updateUI();
+                    showBattleStartMessage();
+                    isProcessing = false;
+                } else {
+                    // Ball missed - enemy gets a turn
+                    updateUI();
+                    
+                    // Check if battle ended
+                    const battleResult = gameState.checkBattleEnd();
+                    if (battleResult === 'playerLost') {
+                        showBattleMessage("All your Pokémon fainted! Game Over!", () => {
+                            showResults('defeat');
+                            isProcessing = false;
+                        });
+                        return;
+                    }
+                    
+                    if (battleResult === 'playerPokemonFainted') {
+                        showBattleMessage(`${player.name} fainted!`, () => {
+                            showPartyMenu(true);
+                            isProcessing = false;
+                        });
+                        return;
+                    }
+                    
+                    // Enemy's turn
+                    setTimeout(() => {
+                        const enemyMoveIndex = gameState.enemyChooseBestMove();
+                        const enemyResult = gameState.useMove(opponent, player, enemyMoveIndex);
+                        
+                        // Trigger damage animation if damage was dealt
+                        if (enemyResult.success && enemyResult.damage !== undefined && enemyResult.damage > 0) {
+                            setTimeout(() => triggerDamageAnimation(true), 100);
+                        }
+                        
+                        showBattleMessage(enemyResult.message, () => {
+                            updateUI();
+                            
+                            // Check battle end again
+                            const battleResult2 = gameState.checkBattleEnd();
+                            
+                            // Handle battle result object or string
+                            if (battleResult2 && typeof battleResult2 === 'object' && (battleResult2.result === 'opponentDefeated' || battleResult2.result === 'opponentDefeatedLevelUp')) {
+                                let message = `You defeated ${opponent.name}!`;
+                                showBattleMessage(message, () => {
+                                    animateExpGain(battleResult2, () => {
+                                        if (battleResult2.leveledUp) {
+                                            const oldLevel = player.level;
+                                            player.level++;
+                                            player.exp -= player.expToNext;
+                                            player.expToNext = player.expToNext * 1.5;
+                                            player.currentHP = player.maxHP;
+                                            showBattleMessage(`${player.name} grew from Level ${oldLevel} to Level ${player.level}!`, () => {
+                                                gameState.startNewBattle();
+                                                updateUI();
+                                                showBattleStartMessage();
+                                                isProcessing = false;
+                                            });
+                                        } else {
+                                            gameState.startNewBattle();
+                                            updateUI();
+                                            showBattleStartMessage();
+                                            isProcessing = false;
+                                        }
+                                    });
+                                });
+                                return;
+                            }
+                            
+                            if (battleResult2 === 'playerLost') {
+                                showBattleMessage("All your Pokémon fainted! Game Over!", () => {
+                                    showResults('defeat');
+                                    isProcessing = false;
+                                });
+                                return;
+                            }
+                            
+                            if (battleResult2 === 'playerPokemonFainted') {
+                                showBattleMessage(`${player.name} fainted!`, () => {
+                                    showPartyMenu(true);
+                                    isProcessing = false;
+                                });
+                                return;
+                            }
+                            
+                            isProcessing = false;
+                        });
+                    }, 500);
+                }
+            });
+        }, 1500); // Blink for 1.5 seconds
+    }, 1000); // Throw animation duration (1s)
 }
 
 function handleRunAction() {
@@ -552,6 +805,38 @@ function updateUI() {
     
     if (!player || !opponent || !battle) return;
     
+    // Update player sprite with company logo
+    const playerSprite = document.getElementById('playerSprite');
+    const playerPlaceholder = playerSprite.querySelector('.pokemon-placeholder');
+    if (playerPlaceholder) {
+        if (typeof POKEMON_DATABASE !== 'undefined' && POKEMON_DATABASE[player.name] && POKEMON_DATABASE[player.name].logo) {
+            const logoPath = POKEMON_DATABASE[player.name].logo;
+            playerPlaceholder.style.backgroundImage = `url(${logoPath})`;
+            playerPlaceholder.style.backgroundSize = 'contain';
+            playerPlaceholder.style.backgroundRepeat = 'no-repeat';
+            playerPlaceholder.style.backgroundPosition = 'center';
+        } else {
+            // Fallback: clear background image if logo not found
+            playerPlaceholder.style.backgroundImage = 'none';
+        }
+    }
+    
+    // Update opponent sprite with company logo
+    const opponentSprite = document.getElementById('opponentSprite');
+    const opponentPlaceholder = opponentSprite.querySelector('.pokemon-placeholder');
+    if (opponentPlaceholder) {
+        if (typeof POKEMON_DATABASE !== 'undefined' && POKEMON_DATABASE[opponent.name] && POKEMON_DATABASE[opponent.name].logo) {
+            const logoPath = POKEMON_DATABASE[opponent.name].logo;
+            opponentPlaceholder.style.backgroundImage = `url(${logoPath})`;
+            opponentPlaceholder.style.backgroundSize = 'contain';
+            opponentPlaceholder.style.backgroundRepeat = 'no-repeat';
+            opponentPlaceholder.style.backgroundPosition = 'center';
+        } else {
+            // Fallback: clear background image if logo not found
+            opponentPlaceholder.style.backgroundImage = 'none';
+        }
+    }
+    
     // Update player info
     document.getElementById('playerName').textContent = player.name;
     document.getElementById('playerGender').textContent = player.gender;
@@ -560,7 +845,6 @@ function updateUI() {
     const playerHpPercent = (player.currentHP / player.maxHP) * 100;
     document.getElementById('playerHpFill').style.width = `${playerHpPercent}%`;
     document.getElementById('playerHpText').textContent = `HP ${player.currentHP}/${player.maxHP}`;
-    document.getElementById('playerMpText').textContent = `MP ${player.currentMP}/${player.maxMP}`;
     
     const playerExpPercent = (player.exp / player.expToNext) * 100;
     document.getElementById('playerExpFill').style.width = `${playerExpPercent}%`;
@@ -574,13 +858,15 @@ function updateUI() {
     const opponentHpPercent = (opponent.currentHP / opponent.maxHP) * 100;
     document.getElementById('opponentHpFill').style.width = `${opponentHpPercent}%`;
     document.getElementById('opponentHpText').textContent = `HP ${opponent.currentHP}/${opponent.maxHP}`;
-    document.getElementById('opponentMpText').textContent = `MP ${opponent.currentMP}/${opponent.maxMP}`;
     
     // Update action prompt
     document.getElementById('promptPokemonName').textContent = player.name;
     
-    // Update action menu cursor
-    updateActionMenuCursor();
+    // Don't auto-highlight action menu cursor on UI update
+    // Only update if cursor is already set (user has navigated)
+    if (currentActionCursor >= 0) {
+        updateActionMenuCursor();
+    }
 }
 
 function showResults(result) {
@@ -612,7 +898,7 @@ function startGame() {
 function restartGame() {
     // Reset game state
     gameState = new GameState();
-    currentActionCursor = 0;
+    currentActionCursor = -1; // No button selected initially
     currentMoveCursor = 0;
     currentPartyCursor = 0;
     isProcessing = false;

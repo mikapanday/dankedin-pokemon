@@ -6,6 +6,7 @@ let currentMoveCursor = -1; // -1 means no move selected initially
 let currentPartyCursor = 0;
 let isProcessing = false;
 let typingTimeout = null; // Track typing effect timeout
+let currentRandomMoves = []; // Store the current randomized moves for the skills menu
 
 // Initialize game
 document.addEventListener('DOMContentLoaded', () => {
@@ -156,7 +157,29 @@ function animateExpGain(expData, callback) {
     });
 }
 
-// Trigger damage flash animation on Pokémon sprite
+// Trigger attack animation on sprite
+function triggerAttackAnimation(isPlayer) {
+    const spriteId = isPlayer ? 'playerSprite' : 'opponentSprite';
+    const sprite = document.getElementById(spriteId);
+    
+    if (sprite) {
+        // Remove any existing attack class to restart animation
+        sprite.classList.remove('attacking');
+        
+        // Force reflow to restart animation
+        void sprite.offsetWidth;
+        
+        // Add attacking class to trigger animation
+        sprite.classList.add('attacking');
+        
+        // Remove class after animation completes
+        setTimeout(() => {
+            sprite.classList.remove('attacking');
+        }, 400); // Match animation duration
+    }
+}
+
+// Trigger damage flash animation on sprite
 function triggerDamageAnimation(isPlayer) {
     const spriteId = isPlayer ? 'playerSprite' : 'opponentSprite';
     const sprite = document.getElementById(spriteId);
@@ -172,6 +195,30 @@ function triggerDamageAnimation(isPlayer) {
             sprite.classList.remove('damaged');
             placeholder.classList.remove('damaged');
         }, 600); // Match animation duration
+    }
+}
+
+// Trigger death animation for player
+function triggerDeathAnimation(callback) {
+    const playerSprite = document.getElementById('playerSprite');
+    
+    if (playerSprite) {
+        // Remove any existing fainted class to restart animation
+        playerSprite.classList.remove('fainted');
+        
+        // Force reflow to restart animation
+        void playerSprite.offsetWidth;
+        
+        // Add fainted class to trigger animation
+        playerSprite.classList.add('fainted');
+        
+        // Call callback after animation completes (1.2 seconds)
+        setTimeout(() => {
+            if (callback) callback();
+        }, 1200);
+    } else {
+        // If sprite not found, just call callback immediately
+        if (callback) callback();
     }
 }
 
@@ -200,13 +247,6 @@ function setupEventListeners() {
     document.getElementById('restartBtn').addEventListener('click', () => restartGame());
 
     // Results buttons
-    document.getElementById('continueBtn').addEventListener('click', () => {
-        document.getElementById('resultsOverlay').style.display = 'none';
-        gameState.startNewBattle();
-        updateUI();
-        triggerSpawnAnimations();
-        showBattleStartMessage();
-    });
     document.getElementById('restartResultsBtn').addEventListener('click', () => restartGame());
 
     // Keyboard navigation
@@ -390,11 +430,17 @@ function showMoveMenu() {
     moveMenu.style.display = 'flex';
     actionMenu.style.display = 'none';
     
-    const playerPokemon = gameState.getCurrentPlayerPokemon();
+    // Generate a new random set of 4 moves from USER_MOVE_DATABASE
+    const allUserMoves = Object.keys(USER_MOVE_DATABASE);
+    const shuffled = allUserMoves.sort(() => Math.random() - 0.5);
+    currentRandomMoves = shuffled.slice(0, 4); // Get 4 random moves
+    
     const movesList = document.getElementById('movesList');
     movesList.innerHTML = '';
     
-    playerPokemon.moves.forEach((move, index) => {
+    // Display the randomized moves
+    currentRandomMoves.forEach((moveKey, index) => {
+        const move = USER_MOVE_DATABASE[moveKey];
         const moveItem = document.createElement('div');
         moveItem.className = 'move-item';
         // Don't preselect any move - start with no selection
@@ -439,12 +485,40 @@ function selectMove(moveIndex) {
     const player = gameState.getCurrentPlayerPokemon();
     const opponent = gameState.getOpponentPokemon();
     
-    // Player's turn
-    const result = gameState.useMove(player, opponent, moveIndex);
+    // Get the selected move from the randomized moves
+    if (moveIndex < 0 || moveIndex >= currentRandomMoves.length) {
+        isProcessing = false;
+        return;
+    }
     
-    // Trigger damage animation if damage was dealt (trigger immediately)
+    const selectedMoveKey = currentRandomMoves[moveIndex];
+    const selectedMove = USER_MOVE_DATABASE[selectedMoveKey];
+    
+    // Ensure we have a valid move with a name
+    if (!selectedMove || !selectedMove.name) {
+        isProcessing = false;
+        return;
+    }
+    
+    // Player's turn - use the move directly (pass a copy to ensure name is preserved)
+    const moveToUse = {
+        name: selectedMove.name,
+        type: selectedMove.type,
+        power: selectedMove.power,
+        accuracy: selectedMove.accuracy,
+        pp: selectedMove.pp,
+        effect: selectedMove.effect,
+        customMessage: selectedMove.customMessage
+    };
+    
+    // Trigger attack animation for player
+    triggerAttackAnimation(true);
+    
+    const result = gameState.useMoveWithObject(player, opponent, moveToUse);
+    
+    // Trigger damage animation if damage was dealt (after attack animation)
     if (result.success && result.damage !== undefined && result.damage > 0) {
-        setTimeout(() => triggerDamageAnimation(false), 100); // Opponent takes damage, slight delay for message
+        setTimeout(() => triggerDamageAnimation(false), 450); // Opponent takes damage after attack animation
     }
     
     showBattleMessage(result.message, () => {
@@ -485,9 +559,11 @@ function selectMove(moveIndex) {
         }
         
         if (battleResult === 'playerLost') {
-            showBattleMessage("All your Pokémon fainted! Game Over!", () => {
-                showResults('defeat');
-                isProcessing = false;
+            showBattleMessage("All your candidates fainted! Game Over!", () => {
+                triggerDeathAnimation(() => {
+                    showResults('defeat');
+                    isProcessing = false;
+                });
             });
             return;
         }
@@ -503,11 +579,15 @@ function selectMove(moveIndex) {
         // Enemy's turn
         setTimeout(() => {
             const enemyMoveIndex = gameState.enemyChooseBestMove();
+            
+            // Trigger attack animation for enemy
+            triggerAttackAnimation(false);
+            
             const enemyResult = gameState.useMove(opponent, player, enemyMoveIndex);
             
-            // Trigger damage animation if damage was dealt (trigger immediately)
+            // Trigger damage animation if damage was dealt (after attack animation)
             if (enemyResult.success && enemyResult.damage !== undefined && enemyResult.damage > 0) {
-                setTimeout(() => triggerDamageAnimation(true), 100); // Player takes damage, slight delay for message
+                setTimeout(() => triggerDamageAnimation(true), 450); // Player takes damage after attack animation
             }
             
             showBattleMessage(enemyResult.message, () => {
@@ -546,9 +626,11 @@ function selectMove(moveIndex) {
                 }
                 
                 if (battleResult2 === 'playerLost') {
-                    showBattleMessage("All your Pokémon fainted! Game Over!", () => {
-                        showResults('defeat');
-                        isProcessing = false;
+                    showBattleMessage("All your candidates fainted! Game Over!", () => {
+                        triggerDeathAnimation(() => {
+                            showResults('defeat');
+                            isProcessing = false;
+                        });
                     });
                     return;
                 }
@@ -605,9 +687,11 @@ function handleBallAction() {
                     // Check if battle ended
                     const battleResult = gameState.checkBattleEnd();
                     if (battleResult === 'playerLost') {
-                        showBattleMessage("All your Pokémon fainted! Game Over!", () => {
-                            showResults('defeat');
-                            isProcessing = false;
+                        showBattleMessage("All your candidates fainted! Game Over!", () => {
+                            triggerDeathAnimation(() => {
+                                showResults('defeat');
+                                isProcessing = false;
+                            });
                         });
                         return;
                     }
@@ -623,11 +707,15 @@ function handleBallAction() {
                     // Enemy's turn
                     setTimeout(() => {
                         const enemyMoveIndex = gameState.enemyChooseBestMove();
+                        
+                        // Trigger attack animation for enemy
+                        triggerAttackAnimation(false);
+                        
                         const enemyResult = gameState.useMove(opponent, player, enemyMoveIndex);
                         
-                        // Trigger damage animation if damage was dealt
+                        // Trigger damage animation if damage was dealt (after attack animation)
                         if (enemyResult.success && enemyResult.damage !== undefined && enemyResult.damage > 0) {
-                            setTimeout(() => triggerDamageAnimation(true), 100);
+                            setTimeout(() => triggerDamageAnimation(true), 450);
                         }
                         
                         showBattleMessage(enemyResult.message, () => {
@@ -666,9 +754,11 @@ function handleBallAction() {
                             }
                             
                             if (battleResult2 === 'playerLost') {
-                                showBattleMessage("All your Pokémon fainted! Game Over!", () => {
-                                    showResults('defeat');
-                                    isProcessing = false;
+                                showBattleMessage("All your candidates fainted! Game Over!", () => {
+                                    triggerDeathAnimation(() => {
+                                        showResults('defeat');
+                                        isProcessing = false;
+                                    });
                                 });
                                 return;
                             }
@@ -724,10 +814,10 @@ function showPartyMenu(required = false) {
     const partyList = document.getElementById('partyList');
     partyList.innerHTML = '';
     
-    gameState.playerParty.forEach((pokemon, index) => {
+    gameState.playerParty.forEach((partyMember, index) => {
         const partyItem = document.createElement('div');
         partyItem.className = 'party-item';
-        if (pokemon.currentHP <= 0) {
+        if (partyMember.currentHP <= 0) {
             partyItem.classList.add('fainted');
         }
         if (index === currentPartyCursor) {
@@ -737,13 +827,13 @@ function showPartyMenu(required = false) {
         const sprite = document.createElement('div');
         sprite.className = 'party-sprite';
         
-        // Set logo image for party sprite
-        const applicantData = typeof APPLICANT_DATABASE !== 'undefined' ? APPLICANT_DATABASE[pokemon.name] : null;
-        const companyData = typeof POKEMON_DATABASE !== 'undefined' ? POKEMON_DATABASE[pokemon.name] : null;
-        const pokemonData = applicantData || companyData;
+        // Set logo image for party sprite - prioritize company data (captured companies)
+        const companyData = typeof POKEMON_DATABASE !== 'undefined' ? POKEMON_DATABASE[partyMember.species] : null;
+        const applicantData = typeof APPLICANT_DATABASE !== 'undefined' ? APPLICANT_DATABASE[partyMember.name] : null;
+        const memberData = companyData || applicantData;
         
-        if (pokemonData && pokemonData.logo) {
-            const logoPath = pokemonData.logo;
+        if (memberData && memberData.logo) {
+            const logoPath = memberData.logo;
             sprite.style.backgroundImage = `url(${logoPath})`;
             sprite.style.backgroundSize = 'cover';
             sprite.style.backgroundRepeat = 'no-repeat';
@@ -759,18 +849,19 @@ function showPartyMenu(required = false) {
         
         const partyName = document.createElement('span');
         partyName.className = 'party-name';
-        partyName.textContent = pokemon.name;
+        // Use species name for companies, name for applicants
+        partyName.textContent = companyData ? partyMember.species : partyMember.name;
         
         const genderSymbol = document.createElement('span');
         genderSymbol.className = 'gender-symbol';
-        if (pokemon.gender === '♀') {
+        if (partyMember.gender === '♀') {
             genderSymbol.classList.add('female');
         }
-        genderSymbol.textContent = pokemon.gender;
+        genderSymbol.textContent = partyMember.gender;
         
         const partyLevel = document.createElement('span');
         partyLevel.className = 'party-level';
-        partyLevel.textContent = `Lv. ${pokemon.level}`;
+        partyLevel.textContent = `Lv. ${partyMember.level}`;
         
         nameRow.appendChild(partyName);
         nameRow.appendChild(genderSymbol);
@@ -780,7 +871,7 @@ function showPartyMenu(required = false) {
         hpBar.className = 'party-hp-bar';
         const hpFill = document.createElement('div');
         hpFill.className = 'party-hp-fill';
-        const hpPercent = (pokemon.currentHP / pokemon.maxHP) * 100;
+        const hpPercent = (partyMember.currentHP / partyMember.maxHP) * 100;
         hpFill.style.width = `${hpPercent}%`;
         // Update HP bar color based on percentage
         if (hpPercent <= 10) {
@@ -792,13 +883,13 @@ function showPartyMenu(required = false) {
         
         const hpText = document.createElement('div');
         hpText.className = 'party-hp-text';
-        hpText.textContent = `HP ${pokemon.currentHP}/${pokemon.maxHP}`;
+        hpText.textContent = `HP ${partyMember.currentHP}/${partyMember.maxHP}`;
         
         info.appendChild(nameRow);
         info.appendChild(hpBar);
         info.appendChild(hpText);
         
-        if (pokemon.currentHP <= 0) {
+        if (partyMember.currentHP <= 0) {
             const status = document.createElement('div');
             status.className = 'party-status';
             status.textContent = 'FNT';
@@ -830,14 +921,15 @@ function closePartyMenu() {
 }
 
 function selectPartyMember(index) {
-    const pokemon = gameState.playerParty[index];
-    if (pokemon.currentHP <= 0) {
-        showBattleMessage(`${pokemon.name} is fainted and can't battle!`);
+    const partyMember = gameState.playerParty[index];
+    if (partyMember.currentHP <= 0) {
+        const displayName = partyMember.species || partyMember.name;
+        showBattleMessage(`${displayName} is fainted and can't battle!`);
         return;
     }
     
     if (gameState.currentBattle) {
-        gameState.currentBattle.playerPokemon = pokemon;
+        gameState.currentBattle.playerPokemon = partyMember;
     }
     closePartyMenu();
     updateUI();
@@ -886,14 +978,14 @@ function updateUI() {
     
     if (!player || !opponent || !battle) return;
     
-    // Update player sprite with applicant photo (from logos folder - user will replace with people photos)
+    // Update player sprite with applicant photo or company logo
     const playerSprite = document.getElementById('playerSprite');
     const playerPlaceholder = playerSprite.querySelector('.pokemon-placeholder');
     if (playerPlaceholder) {
-        // Check applicant database first (for player), then company database (for caught recruiters)
+        // Check company database first (for captured companies), then applicant database (for applicants)
+        const companyData = typeof POKEMON_DATABASE !== 'undefined' ? POKEMON_DATABASE[player.species] : null;
         const applicantData = typeof APPLICANT_DATABASE !== 'undefined' ? APPLICANT_DATABASE[player.name] : null;
-        const companyData = typeof POKEMON_DATABASE !== 'undefined' ? POKEMON_DATABASE[player.name] : null;
-        const playerData = applicantData || companyData;
+        const playerData = companyData || applicantData;
         
         if (playerData && playerData.logo) {
             const logoPath = playerData.logo;
@@ -983,7 +1075,7 @@ function showResults(result) {
     
     if (result === 'defeat') {
         title.textContent = 'Game Over';
-        stats.textContent = 'All your Pokémon fainted!\nBetter luck next time.';
+        stats.textContent = 'All your candidates fainted!\nBetter luck next time.';
     } else {
         title.textContent = 'Battle Won!';
         stats.textContent = 'Congratulations on your victory!';
@@ -995,6 +1087,12 @@ function showResults(result) {
 function startGame() {
     // Hide start overlay
     document.getElementById('startOverlay').style.display = 'none';
+    
+    // Remove death animation class from player sprite if it exists
+    const playerSprite = document.getElementById('playerSprite');
+    if (playerSprite) {
+        playerSprite.classList.remove('fainted');
+    }
     
     // Initialize game
     gameState.initGame();
@@ -1010,6 +1108,12 @@ function restartGame() {
     currentMoveCursor = 0;
     currentPartyCursor = 0;
     isProcessing = false;
+    
+    // Remove death animation class from player sprite
+    const playerSprite = document.getElementById('playerSprite');
+    if (playerSprite) {
+        playerSprite.classList.remove('fainted');
+    }
     
     // Hide all overlays and menus
     document.getElementById('resultsOverlay').style.display = 'none';

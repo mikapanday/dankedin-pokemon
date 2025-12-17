@@ -95,7 +95,7 @@ body {
 /* Battle Scene - Takes slightly less space to give more room to action menu */
 .battle-scene {
     flex: 1.8;
-    background: linear-gradient(180deg, #87ceeb 0%, #6bb6ff 50%, #4a9eff 100%);
+    background: linear-gradient(180deg, #e0eaf4 0%, #d4e3f0 50%, #c5d9e8 100%);
     position: relative;
     overflow: hidden;
     display: flex;
@@ -321,6 +321,34 @@ body {
     }
 }
 
+/* Death/Falling animation */
+.player-pokemon-sprite.fainted {
+    animation: pokemonFaint 1.2s ease-in forwards;
+}
+
+@keyframes pokemonFaint {
+    0% {
+        opacity: 1;
+        transform: translateY(0) rotate(0deg);
+        filter: brightness(1);
+    }
+    30% {
+        opacity: 0.8;
+        transform: translateY(10px) rotate(5deg);
+        filter: brightness(0.7);
+    }
+    60% {
+        opacity: 0.5;
+        transform: translateY(40px) rotate(15deg);
+        filter: brightness(0.4);
+    }
+    100% {
+        opacity: 0;
+        transform: translateY(120px) rotate(90deg);
+        filter: brightness(0.2);
+    }
+}
+
 .opponent-pokemon-sprite.damaged,
 .player-pokemon-sprite.damaged {
     animation: damageShake 0.6s ease-out;
@@ -335,6 +363,39 @@ body {
     }
     20%, 40%, 60%, 80% {
         transform: translateX(5px) translateY(3px);
+    }
+}
+
+/* Attack animations */
+.player-pokemon-sprite.attacking {
+    animation: playerAttack 0.4s ease-out;
+}
+
+.opponent-pokemon-sprite.attacking {
+    animation: opponentAttack 0.4s ease-out;
+}
+
+@keyframes playerAttack {
+    0% {
+        transform: translateX(0) translateY(0) scale(1);
+    }
+    50% {
+        transform: translateX(30px) translateY(-15px) scale(1.1);
+    }
+    100% {
+        transform: translateX(0) translateY(0) scale(1);
+    }
+}
+
+@keyframes opponentAttack {
+    0% {
+        transform: translateX(0) translateY(0) scale(1);
+    }
+    50% {
+        transform: translateX(-30px) translateY(15px) scale(1.1);
+    }
+    100% {
+        transform: translateX(0) translateY(0) scale(1);
     }
 }
 
@@ -1098,13 +1159,6 @@ body {
     background: #005885;
 }
 
-.results-btn:last-child {
-    background: #757575;
-}
-
-.results-btn:last-child:hover {
-    background: #616161;
-}
 
 /* Animations */
 @keyframes shake {

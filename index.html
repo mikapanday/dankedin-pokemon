@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>DankedIn - Pokémon Roguelike</title>
+    <title>DankedIn - Job Hunt Roguelike</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
@@ -116,7 +116,7 @@
             <div class="party-menu" id="partyMenu" style="display: none;">
                 <div class="party-menu-header">
                     <button class="back-btn" id="partyMenuBackBtn">← Back</button>
-                    <span class="party-menu-title">Choose a Pokémon</span>
+                    <span class="party-menu-title">My Resume</span>
                 </div>
                 <div class="party-list" id="partyList">
                     <!-- Party will be dynamically generated -->
@@ -138,12 +138,10 @@
             <div class="start-overlay" id="startOverlay">
                 <div class="start-content">
                     <h1 class="start-title">DankedIn</h1>
-                    <p class="start-subtitle">Pokémon Roguelike</p>
                     <div class="start-description">
-                        <p>Battle wild Pokémon in this roguelike adventure!</p>
-                        <p>Use your skills to catch, train, and battle your way to victory.</p>
+                        <p>You are a job candidate faced with a recruiter. Act now to secure you're job and fill up your resume.</p>
                     </div>
-                    <button class="start-btn" id="startGameBtn">Start Game</button>
+                    <button class="start-btn" id="startGameBtn">Start Battle</button>
                 </div>
             </div>
 
@@ -152,7 +150,6 @@
                 <div class="results-content">
                     <h2 class="results-title" id="resultsTitle">Battle Won!</h2>
                     <div class="results-stats" id="resultsStats"></div>
-                    <button class="results-btn" id="continueBtn">Continue</button>
                     <button class="results-btn" id="restartResultsBtn">Restart</button>
                 </div>
             </div>

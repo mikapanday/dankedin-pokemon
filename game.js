@@ -38,7 +38,7 @@ const COMPANY_NAMES = [
     'SpaceX'
 ];
 
-// Applicant statuses for player Pokémon
+// Applicant statuses for players
 const APPLICANT_STATUSES = [
     'Undergrad',
     'Unemployed',
@@ -56,7 +56,7 @@ const APPLICANT_STATUSES = [
     'PhD'
 ];
 
-// Applicant database for player Pokémon
+// Applicant database for players
 // Levels and HP scale with experience: younger/inexperienced = lower, experienced = higher
 const APPLICANT_DATABASE = {
     'Unemployed': {
@@ -173,7 +173,7 @@ const APPLICANT_DATABASE = {
     }
 };
 
-// Company Pokémon database (for recruiters/opponents)
+// Company database (for recruiters/opponents)
 const POKEMON_DATABASE = {
     'Y Combinator': {
         name: 'Y Combinator',
@@ -263,12 +263,21 @@ const POKEMON_DATABASE = {
 
 // User/Interviewee moves - moves the player can use
 const USER_MOVE_DATABASE = {
-    'SlideInDM': { name: 'Slide in DM', type: 'normal', power: 40, accuracy: 100, pp: 35 },
+    // Unhinged moves
     'PlayFootsies': { name: 'Play Footsies', type: 'normal', power: 40, accuracy: 100, pp: 35, customMessage: 'goes in for hug and play footsies' },
     'Nepotism': { name: 'Nepotism', type: 'fire', power: 110, accuracy: 85, pp: 5 },
+    'Blackmail': { name: 'Blackmail', type: 'dark', power: 90, accuracy: 75, pp: 10 },
+    'KissFeet': { name: 'Kiss Feet', type: 'normal', power: 50, accuracy: 100, pp: 15, customMessage: 'grovels and kisses feet' },
+    'BeggedOnKnees': { name: 'Beg on your knees', type: 'normal', power: 25, accuracy: 100, pp: 20 },
+    'Bribed': { name: 'Bribed', type: 'water', power: 55, accuracy: 80, pp: 5 },
+    'Threaten': { name: 'Threaten', type: 'dark', power: 70, accuracy: 65, pp: 10 },
+    'GuiltTrip': { name: 'Guilt Trip', type: 'psychic', power: 45, accuracy: 85, pp: 20 },
+    'ShowUpUnannounced': { name: 'Show Up Unannounced', type: 'normal', power: 35, accuracy: 90, pp: 25 },
+    'CryInInterview': { name: 'Cry in Interview', type: 'water', power: 30, accuracy: 100, pp: 30 },
+    
+    // Normal moves (keeping some professional ones)
     'SendPortfolio': { name: 'Send Portfolio', type: 'water', power: 20, accuracy: 100, pp: 30 },
     'FollowUpEmail': { name: 'Follow up Email', type: 'electric', power: 20, accuracy: 100, pp: 30 },
-    'BeggedOnKnees': { name: 'Begged on your knees', type: 'normal', power: 25, accuracy: 100, pp: 20 },
     'Referral': { name: 'Referral', type: 'normal', power: 40, accuracy: 100, pp: 15 },
     'ColdEmail': { name: 'Cold Email', type: 'fire', power: 20, accuracy: 100, pp: 25 },
     'LinkedInStalk': { name: 'LinkedIn Stalk', type: 'fire', power: 25, accuracy: 100, pp: 20 },
@@ -279,16 +288,8 @@ const USER_MOVE_DATABASE = {
     'CoverLetter': { name: 'Cover Letter', type: 'grass', power: 28, accuracy: 95, pp: 25 },
     'ThankYouEmail': { name: 'Thank You Email', type: 'water', power: 20, accuracy: 100, pp: 25 },
     'AskForFeedback': { name: 'Ask for Feedback', type: 'water', power: 0, accuracy: 100, pp: 40, effect: 'raiseDefense' },
-    'Bribed': { name: 'Bribed', type: 'water', power: 55, accuracy: 80, pp: 5 },
-    'CounterOffer': { name: 'Counter Offer', type: 'water', power: 20, accuracy: 100, pp: 20 },
-    'ConfidenceBoost': { name: 'Confidence Boost', type: 'normal', power: 0, accuracy: 100, pp: 20, effect: 'raiseAttack' },
-    'FakeItTillYouMakeIt': { name: 'Fake It Till You Make It', type: 'normal', power: 0, accuracy: 100, pp: 40, effect: 'raiseAttack' },
-    'NameDrop': { name: 'Name Drop', type: 'normal', power: 0, accuracy: 100, pp: 20 },
     'SalaryNegotiation': { name: 'Salary Negotiation', type: 'electric', power: 33, accuracy: 100, pp: 20 },
     'NegotiateBenefits': { name: 'Negotiate Benefits', type: 'fire', power: 40, accuracy: 100, pp: 10 },
-    'AcceptOffer': { name: 'Accept Offer', type: 'fire', power: 0, accuracy: 85, pp: 15, effect: 'burn' },
-    'DeclineOffer': { name: 'Decline Offer', type: 'ground', power: 50, accuracy: 100, pp: 10 },
-    'MultipleApplications': { name: 'Multiple Applications', type: 'bug', power: 40, accuracy: 100, pp: 15 },
     'PerfectResume': { name: 'Perfect Resume', type: 'fighting', power: 60, accuracy: 100, pp: 5 },
     'StrongPortfolio': { name: 'Strong Portfolio', type: 'rock', power: 50, accuracy: 80, pp: 5 },
     'GreatReferences': { name: 'Great References', type: 'rock', power: 38, accuracy: 90, pp: 10 },
@@ -298,8 +299,7 @@ const USER_MOVE_DATABASE = {
     'KillerCoverLetter': { name: 'Killer Cover Letter', type: 'steel', power: 45, accuracy: 90, pp: 10 },
     'PerfectTiming': { name: 'Perfect Timing', type: 'fairy', power: 48, accuracy: 100, pp: 15 },
     'GreatFirstImpression': { name: 'Great First Impression', type: 'fairy', power: 40, accuracy: 100, pp: 10 },
-    'MultipleOffers': { name: 'Multiple Offers', type: 'normal', power: 75, accuracy: 90, pp: 5 },
-    'DesperateApplication': { name: 'Desperate Application', type: 'normal', power: 60, accuracy: 100, pp: 15 }
+    'MultipleOffers': { name: 'Multiple Offers', type: 'normal', power: 75, accuracy: 90, pp: 5 }
 };
 
 // Recruiter moves - moves the opponent/recruiter can use
@@ -332,7 +332,7 @@ const RECRUITER_MOVE_DATABASE = {
 // Combined database for backwards compatibility (used in move lookup)
 const MOVE_DATABASE = { ...USER_MOVE_DATABASE, ...RECRUITER_MOVE_DATABASE };
 
-// Get random moves for a Pokémon based on role (user/interviewee or recruiter)
+// Get random moves based on role (user/interviewee or recruiter)
 function getRandomMovesForType(pokemonType, count = 4, isRecruiter = false) {
     // Select the appropriate move database based on role
     const moveDatabase = isRecruiter ? RECRUITER_MOVE_DATABASE : USER_MOVE_DATABASE;
@@ -399,7 +399,7 @@ class GameState {
         // Use applicant database for players, company database for recruiters
         const base = isRecruiter ? POKEMON_DATABASE[species] : APPLICANT_DATABASE[species];
         if (!base) {
-            console.error(`Pokémon ${species} not found`);
+            console.error(`${species} not found`);
             return null;
         }
 
@@ -447,7 +447,7 @@ class GameState {
     }
 
     adjustPokemonLevel(pokemon, newLevel) {
-        // Check both databases to find the Pokémon
+        // Check both databases to find the entity
         const base = APPLICANT_DATABASE[pokemon.species] || POKEMON_DATABASE[pokemon.species];
         if (!base) return;
 
@@ -467,7 +467,7 @@ class GameState {
     }
 
     startNewBattle() {
-        // Always create wild Pokémon battles with random company
+        // Always create wild battles with random company
         // Filter out previous company to avoid repeats
         const availableCompanies = COMPANY_NAMES.filter(company => company !== this.previousCompany);
         // If somehow all companies are filtered out (shouldn't happen), use all companies
@@ -475,7 +475,7 @@ class GameState {
         const opponentSpecies = companiesToChooseFrom[Math.floor(Math.random() * companiesToChooseFrom.length)];
         // Track this company as the previous one
         this.previousCompany = opponentSpecies;
-        // Generate wild Pokémon level between 1 and 100
+        // Generate opponent level between 1 and 100
         const opponentLevel = Math.floor(Math.random() * 100) + 1;
         // Randomly assign gender (50% male, 50% female) - includes female variants
         const opponentGender = Math.random() < 0.5 ? '♂' : '♀';
@@ -484,10 +484,10 @@ class GameState {
         // Change opponent name to "Recruiter from [Company]"
         opponent.name = `Recruiter from ${opponentSpecies}`;
         
-        // Get first non-fainted Pokémon
+        // Get first non-fainted party member
         const playerPokemon = this.playerParty.find(p => p.currentHP > 0) || this.playerParty[0];
         
-        // Balance player Pokémon level to be within 3 levels of opponent
+        // Balance player level to be within 3 levels of opponent
         const currentPlayerLevel = playerPokemon.level;
         const levelDifference = opponentLevel - currentPlayerLevel;
         
@@ -505,7 +505,7 @@ class GameState {
             // Ensure level is at least 1
             newPlayerLevel = Math.max(1, newPlayerLevel);
             
-            // Adjust player Pokémon level and recalculate stats
+            // Adjust player level and recalculate stats
             this.adjustPokemonLevel(playerPokemon, newPlayerLevel);
         }
         
@@ -532,7 +532,8 @@ class GameState {
             isWild: true,
             opponent: opponent,
             playerPokemon: playerPokemon,
-            turn: 'player'
+            turn: 'player',
+            lastEnemyMoveIndex: -1 // Track last move used by enemy to ensure variety
         };
 
         this.battleState = 'idle';
@@ -554,8 +555,10 @@ class GameState {
         // Base damage range: 20-80 points
         const baseDamage = 20 + Math.floor(Math.random() * 61); // Random between 20-80
         
-        // Check for critical hit (10% chance)
-        const isCritical = Math.random() < 0.1;
+        // Check for critical hit - higher chance for recruiters
+        const isRecruiter = this.currentBattle && attacker === this.currentBattle.opponent;
+        const critChance = isRecruiter ? 0.25 : 0.1; // 25% for recruiters, 10% for players
+        const isCritical = Math.random() < critChance;
         const criticalMultiplier = isCritical ? 2.0 : 1.0;
         
         // Reduced level multiplier to make battles last longer
@@ -571,6 +574,11 @@ class GameState {
         
         // Base damage calculation
         let damage = Math.floor(baseDamage * levelMultiplier * attackMod * defenseMod * effectiveness * random * criticalMultiplier);
+        
+        // Apply 10% damage boost for recruiters (opponents)
+        if (isRecruiter) {
+            damage = Math.floor(damage * 1.1);
+        }
         
         // Limit damage to 15% of max HP per hit to ensure battles last at least 5-7 turns
         const maxDamage = Math.floor(defender.maxHP * 0.15);
@@ -644,6 +652,60 @@ class GameState {
         return { success: true, message: message, damage: damage, isCritical: isCritical };
     }
 
+    // Use a move object directly (for randomized moves that don't have PP tracking)
+    useMoveWithObject(attacker, defender, move) {
+        if (!move) {
+            return { success: false, message: `${attacker.name} can't use that move!` };
+        }
+
+        // Check accuracy - apply accuracy modifiers from stat changes
+        // Each accuracy modifier stage changes accuracy by 10% (max -60% to +60%)
+        const accuracyModifier = attacker.statModifiers.accuracy * 10;
+        const finalAccuracy = Math.max(0, Math.min(100, move.accuracy + accuracyModifier));
+        
+        // If accuracy was modified, note it in the message (for debugging/transparency)
+        let accuracyMessage = '';
+        if (attacker.statModifiers.accuracy !== 0) {
+            const modifierText = attacker.statModifiers.accuracy > 0 ? 'raised' : 'lowered';
+            accuracyMessage = ` (Accuracy ${modifierText} by ${Math.abs(accuracyModifier)}%)`;
+        }
+        
+        if (Math.random() * 100 > finalAccuracy) {
+            return { success: false, message: `${attacker.name}'s ${move.name} missed!${accuracyMessage}` };
+        }
+
+        // Handle status moves
+        if (move.effect) {
+            return this.applyMoveEffect(attacker, defender, move);
+        }
+
+        // Damage move
+        const damageResult = this.calculateDamage(attacker, defender, move);
+        const damage = damageResult.damage;
+        const isCritical = damageResult.isCritical;
+        defender.currentHP = Math.max(0, defender.currentHP - damage);
+        
+        const effectiveness = this.getTypeEffectiveness(move.type, defender.type);
+        // Use custom message if available, otherwise use default
+        let message = move.customMessage 
+            ? `${attacker.name} ${move.customMessage}!`
+            : `${attacker.name} used ${move.name}!`;
+        
+        // Add critical hit message
+        if (isCritical) {
+            message += " A critical hit!";
+        }
+        
+        if (effectiveness > 1) {
+            message += " It's super effective!";
+        } else if (effectiveness < 1) {
+            message += " It's not very effective...";
+        }
+        message += `\n${defender.name} took ${damage} damage!`;
+
+        return { success: true, message: message, damage: damage, isCritical: isCritical };
+    }
+
     applyMoveEffect(attacker, defender, move) {
         // Use custom message if available, otherwise use default
         let message = move.customMessage 
@@ -661,9 +723,7 @@ class GameState {
                 break;
             case 'lowerAccuracy':
                 defender.statModifiers.accuracy = Math.max(-6, defender.statModifiers.accuracy - 1);
-                const accuracyStage = defender.statModifiers.accuracy;
-                const accuracyPercent = accuracyStage * 10;
-                message += `\n${defender.name}'s Accuracy fell! (${accuracyPercent > 0 ? '+' : ''}${accuracyPercent}%)`;
+                message += `\n${defender.name}'s Accuracy fell!`;
                 break;
             case 'raiseAttack':
                 attacker.statModifiers.attack = Math.min(6, attacker.statModifiers.attack + 1);
@@ -695,39 +755,38 @@ class GameState {
         const enemy = this.getOpponentPokemon();
         const player = this.getCurrentPlayerPokemon();
         
-        // AI: Always prioritize fight actions (damage moves)
-        // Choose move with highest damage potential
-        let bestMove = null;
-        let bestDamage = 0;
+        // Get available moves (excluding the last move used to ensure variety)
+        const lastMoveIndex = this.currentBattle.lastEnemyMoveIndex;
+        const availableMoves = [];
         
-        // First, find the best damage move
         for (let i = 0; i < enemy.moves.length; i++) {
             const move = enemy.moves[i];
-            if (move.currentPP <= 0) continue;
-            
-            // Prioritize damage moves (fight actions)
-            if (move.power > 0) {
-                const damageResult = this.calculateDamage(enemy, player, move);
-                const damage = damageResult.damage;
-                if (damage > bestDamage) {
-                    bestDamage = damage;
-                    bestMove = i;
+            // Only include moves with PP left and that are different from the last move used
+            if (move.currentPP > 0 && i !== lastMoveIndex) {
+                availableMoves.push(i);
+            }
+        }
+        
+        // If all moves except the last one are exhausted, allow reusing the last move
+        if (availableMoves.length === 0) {
+            for (let i = 0; i < enemy.moves.length; i++) {
+                if (enemy.moves[i].currentPP > 0) {
+                    availableMoves.push(i);
                 }
             }
         }
         
-        // If no damage moves available, use first available move
-        if (bestMove === null) {
-            for (let i = 0; i < enemy.moves.length; i++) {
-                if (enemy.moves[i].currentPP > 0) {
-                    bestMove = i;
-                    break;
-                }
-            }
+        // Randomly select from available moves to ensure variety
+        if (availableMoves.length > 0) {
+            const randomIndex = Math.floor(Math.random() * availableMoves.length);
+            const selectedMoveIndex = availableMoves[randomIndex];
+            // Track this move as the last one used
+            this.currentBattle.lastEnemyMoveIndex = selectedMoveIndex;
+            return selectedMoveIndex;
         }
         
         // Fallback: if somehow no moves available, return 0
-        return bestMove !== null ? bestMove : 0;
+        return 0;
     }
 
     attemptCatch() {
@@ -762,14 +821,20 @@ class GameState {
         if (success) {
             // Add to party if space available
             if (this.playerParty.length < 6) {
-                // Convert recruiter to random applicant status with user moves
-                const randomApplicantStatus = APPLICANT_STATUSES[Math.floor(Math.random() * APPLICANT_STATUSES.length)];
-                const userPokemon = this.createPokemon(randomApplicantStatus, opponent.level, opponent.gender, false); // false = user/interviewee
-                userPokemon.currentHP = Math.floor(userPokemon.maxHP * 0.5); // Heal to 50% when caught
-                this.playerParty.push(userPokemon);
-                return { success: true, message: `You caught ${randomApplicantStatus}!` };
+                // Keep the company/recruiter but give it user moves
+                const caughtCompany = this.createPokemon(opponent.species, opponent.level, opponent.gender, true); // true = isRecruiter (company)
+                // Replace moves with user moves instead of recruiter moves
+                const randomMoves = getRandomMovesForType(caughtCompany.type, 4, false); // false = user moves
+                const moveDatabase = USER_MOVE_DATABASE;
+                caughtCompany.moves = randomMoves.map(moveName => ({
+                    ...moveDatabase[moveName],
+                    currentPP: moveDatabase[moveName].pp
+                }));
+                caughtCompany.currentHP = Math.floor(caughtCompany.maxHP * 0.5); // Heal to 50% when caught
+                this.playerParty.push(caughtCompany);
+                return { success: true, message: `You caught ${opponent.species}!` };
             } else {
-                return { success: false, message: "Your party is full! Release a Pokémon first." };
+                return { success: false, message: "Your party is full! Release one first." };
             }
         } else {
             return { success: false, message: `${opponent.name} broke free!` };
@@ -786,12 +851,12 @@ class GameState {
         const opponent = this.getOpponentPokemon();
         
         if (player.currentHP <= 0) {
-            // Check if player has other Pokémon
+            // Check if player has other party members
             const alivePokemon = this.playerParty.filter(p => p.currentHP > 0);
             if (alivePokemon.length === 0) {
                 return 'playerLost';
             }
-            // Auto-switch to next Pokémon
+            // Auto-switch to next party member
             this.currentBattle.playerPokemon = alivePokemon[0];
             return 'playerPokemonFainted';
         }

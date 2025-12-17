@@ -22,7 +22,7 @@ const TYPE_EFFECTIVENESS = {
     'fairy': { 'fighting': 2, 'dragon': 2, 'dark': 2, 'fire': 0.5, 'poison': 0.5, 'steel': 0.5 }
 };
 
-// Company Pokémon database
+// Company names for recruiters/opponents
 const COMPANY_NAMES = [
     'Y Combinator',
     'Google',
@@ -38,7 +38,142 @@ const COMPANY_NAMES = [
     'SpaceX'
 ];
 
-// Sample Pokémon data (companies as Pokémon)
+// Applicant statuses for player Pokémon
+const APPLICANT_STATUSES = [
+    'Undergrad',
+    'Unemployed',
+    '2+ years of experience',
+    '5+ years of experience',
+    '10+ years of experience',
+    '20+ years of experience',
+    'Recent Grad',
+    'Bootcamp Graduate',
+    'Intern',
+    'Freelancer',
+    'Self-Taught',
+    'Master\'s Degree',
+    'MBA',
+    'PhD'
+];
+
+// Applicant database for player Pokémon
+// Levels and HP scale with experience: younger/inexperienced = lower, experienced = higher
+const APPLICANT_DATABASE = {
+    'Unemployed': {
+        name: 'Unemployed',
+        type: 'normal',
+        baseHP: 15,
+        baseLevel: 3,
+        logo: 'applicants/unemployed.png',
+        role: 'Job Seeker'
+    },
+    'Intern': {
+        name: 'Intern',
+        type: 'normal',
+        baseHP: 16,
+        baseLevel: 4,
+        logo: 'applicants/intern.png',
+        role: 'Intern'
+    },
+    'Undergrad': {
+        name: 'Undergrad',
+        type: 'normal',
+        baseHP: 18,
+        baseLevel: 5,
+        logo: 'applicants/undergrad.png',
+        role: 'Student'
+    },
+    'Recent Grad': {
+        name: 'Recent Grad',
+        type: 'normal',
+        baseHP: 20,
+        baseLevel: 7,
+        logo: 'applicants/recentgrad.png',
+        role: 'New Grad'
+    },
+    'Bootcamp Graduate': {
+        name: 'Bootcamp Graduate',
+        type: 'normal',
+        baseHP: 22,
+        baseLevel: 10,
+        logo: 'applicants/bootcamp.png',
+        role: 'Bootcamp Grad'
+    },
+    'Self-Taught': {
+        name: 'Self-Taught',
+        type: 'normal',
+        baseHP: 23,
+        baseLevel: 12,
+        logo: 'applicants/selftaught.png',
+        role: 'Self-Learner'
+    },
+    'Freelancer': {
+        name: 'Freelancer',
+        type: 'normal',
+        baseHP: 28,
+        baseLevel: 25,
+        logo: 'applicants/linkedin-profile-4.png',
+        role: 'Freelancer'
+    },
+    '2+ years of experience': {
+        name: '2+ years of experience',
+        type: 'normal',
+        baseHP: 30,
+        baseLevel: 28,
+        logo: 'applicants/2years.png',
+        role: 'Experienced'
+    },
+    'Master\'s Degree': {
+        name: 'Master\'s Degree',
+        type: 'psychic',
+        baseHP: 35,
+        baseLevel: 45,
+        logo: 'applicants/masters.png',
+        role: 'Graduate'
+    },
+    '5+ years of experience': {
+        name: '5+ years of experience',
+        type: 'normal',
+        baseHP: 38,
+        baseLevel: 42,
+        logo: 'applicants/5years.png',
+        role: 'Mid-Level'
+    },
+    'MBA': {
+        name: 'MBA',
+        type: 'psychic',
+        baseHP: 40,
+        baseLevel: 50,
+        logo: 'applicants/mba.png',
+        role: 'Business Graduate'
+    },
+    'PhD': {
+        name: 'PhD',
+        type: 'psychic',
+        baseHP: 42,
+        baseLevel: 55,
+        logo: 'applicants/phd.png',
+        role: 'Doctorate'
+    },
+    '10+ years of experience': {
+        name: '10+ years of experience',
+        type: 'normal',
+        baseHP: 45,
+        baseLevel: 65,
+        logo: 'applicants/10years.png',
+        role: 'Senior'
+    },
+    '20+ years of experience': {
+        name: '20+ years of experience',
+        type: 'normal',
+        baseHP: 50,
+        baseLevel: 90,
+        logo: 'applicants/20years.png',
+        role: 'Veteran'
+    }
+};
+
+// Company Pokémon database (for recruiters/opponents)
 const POKEMON_DATABASE = {
     'Y Combinator': {
         name: 'Y Combinator',
@@ -126,113 +261,89 @@ const POKEMON_DATABASE = {
     }
 };
 
-// Move database
-const MOVE_DATABASE = {
-    'Scratch': { name: 'Scratch', type: 'normal', power: 40, accuracy: 100, pp: 35 },
-    'Growl': { name: 'Growl', type: 'normal', power: 0, accuracy: 100, pp: 40, effect: 'lowerAttack' },
-    'Assist': { name: 'Assist', type: 'normal', power: 0, accuracy: 100, pp: 20 },
-    'Sand Attack': { name: 'Sand Attack', type: 'ground', power: 0, accuracy: 100, pp: 15, effect: 'lowerAccuracy' },
-    'Ember': { name: 'Ember', type: 'fire', power: 40, accuracy: 100, pp: 25 },
-    'Tail Whip': { name: 'Tail Whip', type: 'normal', power: 0, accuracy: 100, pp: 30, effect: 'lowerDefense' },
-    'Howl': { name: 'Howl', type: 'normal', power: 0, accuracy: 100, pp: 40, effect: 'raiseAttack' },
-    'Flame Charge': { name: 'Flame Charge', type: 'fire', power: 50, accuracy: 100, pp: 20 },
-    'Peck': { name: 'Peck', type: 'flying', power: 35, accuracy: 100, pp: 35 },
-    'Quick Attack': { name: 'Quick Attack', type: 'normal', power: 40, accuracy: 100, pp: 30 },
-    'Wing Attack': { name: 'Wing Attack', type: 'flying', power: 60, accuracy: 100, pp: 35 },
-    'Thunder Shock': { name: 'Thunder Shock', type: 'electric', power: 40, accuracy: 100, pp: 30 },
-    'Thunder Wave': { name: 'Thunder Wave', type: 'electric', power: 0, accuracy: 100, pp: 20, effect: 'paralyze' },
-    'Spark': { name: 'Spark', type: 'electric', power: 65, accuracy: 100, pp: 20 },
-    'Tackle': { name: 'Tackle', type: 'normal', power: 40, accuracy: 100, pp: 35 },
-    'Vine Whip': { name: 'Vine Whip', type: 'grass', power: 45, accuracy: 100, pp: 25 },
-    'Growth': { name: 'Growth', type: 'normal', power: 0, accuracy: 100, pp: 20, effect: 'raiseAttack' },
-    'Razor Leaf': { name: 'Razor Leaf', type: 'grass', power: 55, accuracy: 95, pp: 25 },
-    'Water Gun': { name: 'Water Gun', type: 'water', power: 40, accuracy: 100, pp: 25 },
-    'Bubble': { name: 'Bubble', type: 'water', power: 40, accuracy: 100, pp: 30 },
-    'Withdraw': { name: 'Withdraw', type: 'water', power: 0, accuracy: 100, pp: 40, effect: 'raiseDefense' },
-    'Hydro Pump': { name: 'Hydro Pump', type: 'water', power: 110, accuracy: 80, pp: 5 },
-    'Aqua Jet': { name: 'Aqua Jet', type: 'water', power: 40, accuracy: 100, pp: 20 },
-    'Swords Dance': { name: 'Swords Dance', type: 'normal', power: 0, accuracy: 100, pp: 20, effect: 'raiseAttack' },
-    'Megahorn': { name: 'Megahorn', type: 'bug', power: 120, accuracy: 85, pp: 10 },
-    'Brave Bird': { name: 'Brave Bird', type: 'flying', power: 120, accuracy: 100, pp: 15 },
-    'Iron Head': { name: 'Iron Head', type: 'steel', power: 80, accuracy: 100, pp: 15 },
-    'Roost': { name: 'Roost', type: 'flying', power: 0, accuracy: 100, pp: 10, effect: 'heal' },
-    'Steel Wing': { name: 'Steel Wing', type: 'steel', power: 70, accuracy: 90, pp: 25 },
-    'Headbutt': { name: 'Headbutt', type: 'normal', power: 70, accuracy: 100, pp: 15 },
-    'Swift': { name: 'Swift', type: 'normal', power: 60, accuracy: 100, pp: 20 },
-    'Rest': { name: 'Rest', type: 'psychic', power: 0, accuracy: 100, pp: 10, effect: 'heal' },
-    'Belly Drum': { name: 'Belly Drum', type: 'normal', power: 0, accuracy: 100, pp: 10, effect: 'raiseAttack' },
-    'Flamethrower': { name: 'Flamethrower', type: 'fire', power: 90, accuracy: 100, pp: 15 },
-    'Shadow Ball': { name: 'Shadow Ball', type: 'ghost', power: 80, accuracy: 100, pp: 15 },
-    'Torch Song': { name: 'Torch Song', type: 'fire', power: 80, accuracy: 100, pp: 10 },
-    'Will-O-Wisp': { name: 'Will-O-Wisp', type: 'fire', power: 0, accuracy: 85, pp: 15, effect: 'burn' },
-    'Earthquake': { name: 'Earthquake', type: 'ground', power: 100, accuracy: 100, pp: 10 },
-    'Drill Run': { name: 'Drill Run', type: 'ground', power: 80, accuracy: 95, pp: 10 },
-    'Leaf Blade': { name: 'Leaf Blade', type: 'grass', power: 90, accuracy: 100, pp: 15 },
-    'Spirit Shackle': { name: 'Spirit Shackle', type: 'ghost', power: 80, accuracy: 100, pp: 10 },
-    // High damage moves
-    'Fire Blast': { name: 'Fire Blast', type: 'fire', power: 110, accuracy: 85, pp: 5 },
-    'Thunder': { name: 'Thunder', type: 'electric', power: 110, accuracy: 70, pp: 10 },
-    'Blizzard': { name: 'Blizzard', type: 'ice', power: 110, accuracy: 70, pp: 5 },
-    'Solar Beam': { name: 'Solar Beam', type: 'grass', power: 120, accuracy: 100, pp: 10 },
-    'Surf': { name: 'Surf', type: 'water', power: 90, accuracy: 100, pp: 15 },
-    'Ice Beam': { name: 'Ice Beam', type: 'ice', power: 90, accuracy: 100, pp: 10 },
-    'Thunderbolt': { name: 'Thunderbolt', type: 'electric', power: 90, accuracy: 100, pp: 15 },
-    'Psychic': { name: 'Psychic', type: 'psychic', power: 90, accuracy: 100, pp: 10 },
-    'Dark Pulse': { name: 'Dark Pulse', type: 'dark', power: 80, accuracy: 100, pp: 15 },
-    'Night Slash': { name: 'Night Slash', type: 'dark', power: 70, accuracy: 100, pp: 15 },
-    'Aerial Ace': { name: 'Aerial Ace', type: 'flying', power: 60, accuracy: 100, pp: 20 },
-    'Air Slash': { name: 'Air Slash', type: 'flying', power: 75, accuracy: 95, pp: 15 },
-    'Sky Attack': { name: 'Sky Attack', type: 'flying', power: 140, accuracy: 90, pp: 5 },
-    'Focus Blast': { name: 'Focus Blast', type: 'fighting', power: 120, accuracy: 70, pp: 5 },
-    'Close Combat': { name: 'Close Combat', type: 'fighting', power: 120, accuracy: 100, pp: 5 },
-    'Stone Edge': { name: 'Stone Edge', type: 'rock', power: 100, accuracy: 80, pp: 5 },
-    'Rock Slide': { name: 'Rock Slide', type: 'rock', power: 75, accuracy: 90, pp: 10 },
-    'Sludge Bomb': { name: 'Sludge Bomb', type: 'poison', power: 90, accuracy: 100, pp: 10 },
-    'Poison Jab': { name: 'Poison Jab', type: 'poison', power: 80, accuracy: 100, pp: 20 },
-    'Dragon Claw': { name: 'Dragon Claw', type: 'dragon', power: 80, accuracy: 100, pp: 15 },
-    'Dragon Pulse': { name: 'Dragon Pulse', type: 'dragon', power: 85, accuracy: 100, pp: 10 },
-    'Flash Cannon': { name: 'Flash Cannon', type: 'steel', power: 80, accuracy: 100, pp: 10 },
-    'Meteor Mash': { name: 'Meteor Mash', type: 'steel', power: 90, accuracy: 90, pp: 10 },
-    'Bug Buzz': { name: 'Bug Buzz', type: 'bug', power: 90, accuracy: 100, pp: 10 },
-    'X-Scissor': { name: 'X-Scissor', type: 'bug', power: 80, accuracy: 100, pp: 15 },
-    'Moonblast': { name: 'Moonblast', type: 'fairy', power: 95, accuracy: 100, pp: 15 },
-    'Dazzling Gleam': { name: 'Dazzling Gleam', type: 'fairy', power: 80, accuracy: 100, pp: 10 },
-    'Hyper Beam': { name: 'Hyper Beam', type: 'normal', power: 150, accuracy: 90, pp: 5 },
-    'Giga Impact': { name: 'Giga Impact', type: 'normal', power: 150, accuracy: 90, pp: 5 },
-    'Double-Edge': { name: 'Double-Edge', type: 'normal', power: 120, accuracy: 100, pp: 15 }
+// User/Interviewee moves - moves the player can use
+const USER_MOVE_DATABASE = {
+    'SlideInDM': { name: 'Slide in DM', type: 'normal', power: 40, accuracy: 100, pp: 35 },
+    'PlayFootsies': { name: 'Play Footsies', type: 'normal', power: 40, accuracy: 100, pp: 35, customMessage: 'goes in for hug and play footsies' },
+    'Nepotism': { name: 'Nepotism', type: 'fire', power: 110, accuracy: 85, pp: 5 },
+    'SendPortfolio': { name: 'Send Portfolio', type: 'water', power: 20, accuracy: 100, pp: 30 },
+    'FollowUpEmail': { name: 'Follow up Email', type: 'electric', power: 20, accuracy: 100, pp: 30 },
+    'BeggedOnKnees': { name: 'Begged on your knees', type: 'normal', power: 25, accuracy: 100, pp: 20 },
+    'Referral': { name: 'Referral', type: 'normal', power: 40, accuracy: 100, pp: 15 },
+    'ColdEmail': { name: 'Cold Email', type: 'fire', power: 20, accuracy: 100, pp: 25 },
+    'LinkedInStalk': { name: 'LinkedIn Stalk', type: 'fire', power: 25, accuracy: 100, pp: 20 },
+    'CoffeeChat': { name: 'Coffee Chat', type: 'flying', power: 18, accuracy: 100, pp: 35 },
+    'ApplicationSubmitted': { name: 'Application Submitted', type: 'normal', power: 20, accuracy: 100, pp: 30 },
+    'NetworkingEvent': { name: 'Networking Event', type: 'flying', power: 30, accuracy: 100, pp: 35 },
+    'InterviewPrep': { name: 'Interview Prep', type: 'normal', power: 0, accuracy: 100, pp: 20, effect: 'raiseAttack' },
+    'CoverLetter': { name: 'Cover Letter', type: 'grass', power: 28, accuracy: 95, pp: 25 },
+    'ThankYouEmail': { name: 'Thank You Email', type: 'water', power: 20, accuracy: 100, pp: 25 },
+    'AskForFeedback': { name: 'Ask for Feedback', type: 'water', power: 0, accuracy: 100, pp: 40, effect: 'raiseDefense' },
+    'Bribed': { name: 'Bribed', type: 'water', power: 55, accuracy: 80, pp: 5 },
+    'CounterOffer': { name: 'Counter Offer', type: 'water', power: 20, accuracy: 100, pp: 20 },
+    'ConfidenceBoost': { name: 'Confidence Boost', type: 'normal', power: 0, accuracy: 100, pp: 20, effect: 'raiseAttack' },
+    'FakeItTillYouMakeIt': { name: 'Fake It Till You Make It', type: 'normal', power: 0, accuracy: 100, pp: 40, effect: 'raiseAttack' },
+    'NameDrop': { name: 'Name Drop', type: 'normal', power: 0, accuracy: 100, pp: 20 },
+    'SalaryNegotiation': { name: 'Salary Negotiation', type: 'electric', power: 33, accuracy: 100, pp: 20 },
+    'NegotiateBenefits': { name: 'Negotiate Benefits', type: 'fire', power: 40, accuracy: 100, pp: 10 },
+    'AcceptOffer': { name: 'Accept Offer', type: 'fire', power: 0, accuracy: 85, pp: 15, effect: 'burn' },
+    'DeclineOffer': { name: 'Decline Offer', type: 'ground', power: 50, accuracy: 100, pp: 10 },
+    'MultipleApplications': { name: 'Multiple Applications', type: 'bug', power: 40, accuracy: 100, pp: 15 },
+    'PerfectResume': { name: 'Perfect Resume', type: 'fighting', power: 60, accuracy: 100, pp: 5 },
+    'StrongPortfolio': { name: 'Strong Portfolio', type: 'rock', power: 50, accuracy: 80, pp: 5 },
+    'GreatReferences': { name: 'Great References', type: 'rock', power: 38, accuracy: 90, pp: 10 },
+    'StandoutCandidate': { name: 'Standout Candidate', type: 'dragon', power: 40, accuracy: 100, pp: 15 },
+    'ImpressiveExperience': { name: 'Impressive Experience', type: 'dragon', power: 43, accuracy: 100, pp: 10 },
+    'StrongNetwork': { name: 'Strong Network', type: 'steel', power: 40, accuracy: 100, pp: 10 },
+    'KillerCoverLetter': { name: 'Killer Cover Letter', type: 'steel', power: 45, accuracy: 90, pp: 10 },
+    'PerfectTiming': { name: 'Perfect Timing', type: 'fairy', power: 48, accuracy: 100, pp: 15 },
+    'GreatFirstImpression': { name: 'Great First Impression', type: 'fairy', power: 40, accuracy: 100, pp: 10 },
+    'MultipleOffers': { name: 'Multiple Offers', type: 'normal', power: 75, accuracy: 90, pp: 5 },
+    'DesperateApplication': { name: 'Desperate Application', type: 'normal', power: 60, accuracy: 100, pp: 15 }
 };
 
-// Get random moves for a Pokémon based on its type
-function getRandomMovesForType(pokemonType, count = 4) {
-    // Get type-matching moves with power >= 60
-    const typeMoves = Object.keys(MOVE_DATABASE).filter(moveName => {
-        const move = MOVE_DATABASE[moveName];
-        return (move.type === pokemonType || move.type === 'normal') && move.power >= 60;
-    });
+// Recruiter moves - moves the opponent/recruiter can use
+// Power values reduced to make battles last longer (at least 5 turns)
+const RECRUITER_MOVE_DATABASE = {
+    'TechnicalInterview': { name: 'Technical Interview', type: 'bug', power: 60, accuracy: 85, pp: 10 },
+    'Rejected': { name: 'Rejected', type: 'normal', power: 0, accuracy: 100, pp: 40, effect: 'lowerAttack' },
+    'MovedOnToAnotherCandidate': { name: 'Moved on to another Candidate', type: 'ground', power: 0, accuracy: 100, pp: 15, effect: 'lowerAccuracy' },
+    'Ghosted': { name: 'Ghosted', type: 'ground', power: 0, accuracy: 100, pp: 15, effect: 'lowerAccuracy' },
+    'PhoneScreen': { name: 'Phone Screen', type: 'electric', power: 0, accuracy: 100, pp: 20, effect: 'paralyze' },
+    'BehavioralInterview': { name: 'Behavioral Interview', type: 'normal', power: 35, accuracy: 100, pp: 15 },
+    'SystemDesign': { name: 'System Design', type: 'normal', power: 30, accuracy: 100, pp: 20 },
+    'WhiteboardChallenge': { name: 'Whiteboard Challenge', type: 'psychic', power: 0, accuracy: 100, pp: 10, effect: 'heal' },
+    'TakeHomeAssignment': { name: 'Take Home Assignment', type: 'flying', power: 0, accuracy: 100, pp: 10, effect: 'heal' },
+    'FinalRound': { name: 'Final Round', type: 'flying', power: 60, accuracy: 100, pp: 15 },
+    'BackgroundCheck': { name: 'Background Check', type: 'steel', power: 40, accuracy: 100, pp: 15 },
+    'ReferenceCheck': { name: 'Reference Check', type: 'steel', power: 35, accuracy: 90, pp: 25 },
+    'CultureFit': { name: 'Culture Fit', type: 'normal', power: 0, accuracy: 100, pp: 10, effect: 'raiseAttack' },
+    'OfferLetter': { name: 'Offer Letter', type: 'fire', power: 45, accuracy: 100, pp: 15 },
+    'SignBonus': { name: 'Sign Bonus', type: 'ghost', power: 40, accuracy: 100, pp: 15 },
+    'LowballOffer': { name: 'Lowball Offer', type: 'normal', power: 0, accuracy: 100, pp: 30, effect: 'lowerDefense' },
+    'RejectionEmail': { name: 'Rejection Email', type: 'poison', power: 40, accuracy: 100, pp: 20 },
+    'PortfolioReview': { name: 'Portfolio Review', type: 'water', power: 20, accuracy: 100, pp: 30 },
+    'StartDate': { name: 'Start Date', type: 'ground', power: 40, accuracy: 95, pp: 10 },
+    'Onboarding': { name: 'Onboarding', type: 'grass', power: 45, accuracy: 100, pp: 15 },
+    'DreamJobOffer': { name: 'Dream Job Offer', type: 'flying', power: 70, accuracy: 90, pp: 5 },
+    'AceTheInterview': { name: 'Ace the Interview', type: 'fighting', power: 60, accuracy: 70, pp: 5 }
+};
+
+// Combined database for backwards compatibility (used in move lookup)
+const MOVE_DATABASE = { ...USER_MOVE_DATABASE, ...RECRUITER_MOVE_DATABASE };
+
+// Get random moves for a Pokémon based on role (user/interviewee or recruiter)
+function getRandomMovesForType(pokemonType, count = 4, isRecruiter = false) {
+    // Select the appropriate move database based on role
+    const moveDatabase = isRecruiter ? RECRUITER_MOVE_DATABASE : USER_MOVE_DATABASE;
     
-    // Get all high-damage moves (power >= 70) of any type
-    const highDamageMoves = Object.keys(MOVE_DATABASE).filter(moveName => {
-        const move = MOVE_DATABASE[moveName];
-        return move.power >= 70;
-    });
+    // Get all available moves from the appropriate database
+    const allMoves = Object.keys(moveDatabase);
     
-    // Combine and prioritize: type moves first, then high-damage moves
-    const availableMoves = [...typeMoves, ...highDamageMoves];
+    // Shuffle all moves randomly
+    const shuffled = allMoves.sort(() => Math.random() - 0.5);
     
-    // Remove duplicates
-    const uniqueMoves = [...new Set(availableMoves)];
-    
-    // If we don't have enough moves, add any move with power >= 50
-    if (uniqueMoves.length < count) {
-        const mediumMoves = Object.keys(MOVE_DATABASE).filter(moveName => {
-            const move = MOVE_DATABASE[moveName];
-            return move.power >= 50 && !uniqueMoves.includes(moveName);
-        });
-        uniqueMoves.push(...mediumMoves);
-    }
-    
-    // Shuffle and pick random moves
-    const shuffled = uniqueMoves.sort(() => Math.random() - 0.5);
+    // Pick random moves (ensuring we get exactly count moves)
     return shuffled.slice(0, Math.min(count, shuffled.length));
 }
 
@@ -268,44 +379,60 @@ class GameState {
         this.selectedPartyIndex = -1;
         this.messageQueue = [];
         this.currentMessage = null;
+        this.previousCompany = null; // Track previous company to avoid repeats
     }
 
     initGame() {
-        // Initialize player with random starter company
-        const randomStarter = COMPANY_NAMES[Math.floor(Math.random() * COMPANY_NAMES.length)];
+        // Initialize player with random starter applicant status
+        const randomStarter = APPLICANT_STATUSES[Math.floor(Math.random() * APPLICANT_STATUSES.length)];
+        // Get the base level for this applicant status
+        const applicantData = APPLICANT_DATABASE[randomStarter];
+        const starterLevel = applicantData ? applicantData.baseLevel : 5; // Default to 5 if not found
         // Randomly assign gender (50% male, 50% female)
         const starterGender = Math.random() < 0.5 ? '♂' : '♀';
-        const starter = this.createPokemon(randomStarter, 4, starterGender);
+        const starter = this.createPokemon(randomStarter, starterLevel, starterGender, false); // false = user/interviewee
         this.playerParty = [starter];
         this.startNewBattle();
     }
 
-    createPokemon(species, level, gender) {
-        const base = POKEMON_DATABASE[species];
+    createPokemon(species, level, gender, isRecruiter = false) {
+        // Use applicant database for players, company database for recruiters
+        const base = isRecruiter ? POKEMON_DATABASE[species] : APPLICANT_DATABASE[species];
         if (!base) {
             console.error(`Pokémon ${species} not found`);
             return null;
         }
 
-        // HP scales proportionally with level
-        // Formula: baseHP * (1 + (level - 1) * 0.2) ensures level 1 gets baseHP and scales up
-        const hp = Math.floor(base.baseHP * (1 + (level - 1) * 0.2));
+        // HP calculation: For applicants, HP scales with their base level (experience)
+        // For recruiters, use standard level-based scaling
+        let hp;
+        if (!isRecruiter && base.baseLevel) {
+            // For applicants, HP scales based on their base level (experience)
+            // Use a gentler scaling: baseHP * (1 + (baseLevel - 1) * 0.12)
+            hp = Math.floor(base.baseHP * (1 + (base.baseLevel - 1) * 0.12));
+        } else {
+            // For recruiters or applicants without baseLevel, use standard scaling
+            hp = Math.floor(base.baseHP * (1 + (level - 1) * 0.2));
+        }
 
-        // Get randomized move set (4 moves with high damage)
-        const randomMoves = getRandomMovesForType(base.type, 4);
+        // Get randomized move set (4 moves) - use recruiter moves for opponents, user moves for players
+        const randomMoves = getRandomMovesForType(base.type, 4, isRecruiter);
+        
+        // Get the appropriate move database
+        const moveDatabase = isRecruiter ? RECRUITER_MOVE_DATABASE : USER_MOVE_DATABASE;
         
         return {
             species: species,
             name: species,
-            level: level,
+            level: level, // Use the passed level (which is baseLevel for applicants from initGame)
             gender: gender,
             type: base.type,
             role: base.role,
             maxHP: hp,
             currentHP: hp,
             moves: randomMoves.map(moveName => ({
-                ...MOVE_DATABASE[moveName],
-                currentPP: MOVE_DATABASE[moveName].pp
+                ...moveDatabase[moveName],
+                currentPP: moveDatabase[moveName].pp
             })),
             exp: 0,
             expToNext: 18,
@@ -320,7 +447,8 @@ class GameState {
     }
 
     adjustPokemonLevel(pokemon, newLevel) {
-        const base = POKEMON_DATABASE[pokemon.species];
+        // Check both databases to find the Pokémon
+        const base = APPLICANT_DATABASE[pokemon.species] || POKEMON_DATABASE[pokemon.species];
         if (!base) return;
 
         // Calculate new stats based on new level (proportional scaling)
@@ -340,13 +468,21 @@ class GameState {
 
     startNewBattle() {
         // Always create wild Pokémon battles with random company
-        const opponentSpecies = COMPANY_NAMES[Math.floor(Math.random() * COMPANY_NAMES.length)];
+        // Filter out previous company to avoid repeats
+        const availableCompanies = COMPANY_NAMES.filter(company => company !== this.previousCompany);
+        // If somehow all companies are filtered out (shouldn't happen), use all companies
+        const companiesToChooseFrom = availableCompanies.length > 0 ? availableCompanies : COMPANY_NAMES;
+        const opponentSpecies = companiesToChooseFrom[Math.floor(Math.random() * companiesToChooseFrom.length)];
+        // Track this company as the previous one
+        this.previousCompany = opponentSpecies;
         // Generate wild Pokémon level between 1 and 100
         const opponentLevel = Math.floor(Math.random() * 100) + 1;
         // Randomly assign gender (50% male, 50% female) - includes female variants
         const opponentGender = Math.random() < 0.5 ? '♂' : '♀';
 
-        const opponent = this.createPokemon(opponentSpecies, opponentLevel, opponentGender);
+        const opponent = this.createPokemon(opponentSpecies, opponentLevel, opponentGender, true); // true = isRecruiter
+        // Change opponent name to "Recruiter from [Company]"
+        opponent.name = `Recruiter from ${opponentSpecies}`;
         
         // Get first non-fainted Pokémon
         const playerPokemon = this.playerParty.find(p => p.currentHP > 0) || this.playerParty[0];
@@ -413,29 +549,37 @@ class GameState {
     }
 
     calculateDamage(attacker, defender, move) {
-        if (move.power === 0) return 0;
+        if (move.power === 0) return { damage: 0, isCritical: false };
 
-        const baseDamage = move.power;
-        // Reduced level multiplier to prevent excessive scaling
-        const levelMultiplier = Math.sqrt(attacker.level / 5);
-        const attackMod = 1 + (attacker.statModifiers.attack * 0.15);
-        const defenseMod = 1 - (defender.statModifiers.defense * 0.15);
+        // Base damage range: 20-80 points
+        const baseDamage = 20 + Math.floor(Math.random() * 61); // Random between 20-80
         
-        // Type effectiveness (more impactful)
+        // Check for critical hit (10% chance)
+        const isCritical = Math.random() < 0.1;
+        const criticalMultiplier = isCritical ? 2.0 : 1.0;
+        
+        // Reduced level multiplier to make battles last longer
+        const levelMultiplier = Math.sqrt(attacker.level / 10);
+        const attackMod = 1 + (attacker.statModifiers.attack * 0.1);
+        const defenseMod = 1 - (defender.statModifiers.defense * 0.1);
+        
+        // Type effectiveness
         const effectiveness = this.getTypeEffectiveness(move.type, defender.type);
         
         // Random variation (0.85 to 1.0)
         const random = 0.85 + Math.random() * 0.15;
         
         // Base damage calculation
-        let damage = Math.floor(baseDamage * levelMultiplier * attackMod * defenseMod * effectiveness * random);
+        let damage = Math.floor(baseDamage * levelMultiplier * attackMod * defenseMod * effectiveness * random * criticalMultiplier);
         
-        // Prevent one-shot kills: damage can't exceed 50% of defender's max HP
-        const maxDamage = Math.floor(defender.maxHP * 0.5);
+        // Limit damage to 15% of max HP per hit to ensure battles last at least 5-7 turns
+        const maxDamage = Math.floor(defender.maxHP * 0.15);
         damage = Math.min(damage, maxDamage);
         
         // Ensure minimum damage of 1
-        return Math.max(1, damage);
+        damage = Math.max(1, damage);
+        
+        return { damage: damage, isCritical: isCritical };
     }
 
     getTypeEffectiveness(attackType, defenseType) {
@@ -474,11 +618,22 @@ class GameState {
         }
 
         // Damage move
-        const damage = this.calculateDamage(attacker, defender, move);
+        const damageResult = this.calculateDamage(attacker, defender, move);
+        const damage = damageResult.damage;
+        const isCritical = damageResult.isCritical;
         defender.currentHP = Math.max(0, defender.currentHP - damage);
         
         const effectiveness = this.getTypeEffectiveness(move.type, defender.type);
-        let message = `${attacker.name} used ${move.name}!`;
+        // Use custom message if available, otherwise use default
+        let message = move.customMessage 
+            ? `${attacker.name} ${move.customMessage}!`
+            : `${attacker.name} used ${move.name}!`;
+        
+        // Add critical hit message
+        if (isCritical) {
+            message += " A critical hit!";
+        }
+        
         if (effectiveness > 1) {
             message += " It's super effective!";
         } else if (effectiveness < 1) {
@@ -486,11 +641,14 @@ class GameState {
         }
         message += `\n${defender.name} took ${damage} damage!`;
 
-        return { success: true, message: message, damage: damage };
+        return { success: true, message: message, damage: damage, isCritical: isCritical };
     }
 
     applyMoveEffect(attacker, defender, move) {
-        let message = `${attacker.name} used ${move.name}!`;
+        // Use custom message if available, otherwise use default
+        let message = move.customMessage 
+            ? `${attacker.name} ${move.customMessage}!`
+            : `${attacker.name} used ${move.name}!`;
         
         switch (move.effect) {
             case 'lowerAttack':
@@ -549,7 +707,8 @@ class GameState {
             
             // Prioritize damage moves (fight actions)
             if (move.power > 0) {
-                const damage = this.calculateDamage(enemy, player, move);
+                const damageResult = this.calculateDamage(enemy, player, move);
+                const damage = damageResult.damage;
                 if (damage > bestDamage) {
                     bestDamage = damage;
                     bestMove = i;
@@ -577,17 +736,38 @@ class GameState {
         }
 
         const opponent = this.getOpponentPokemon();
+        const hpPercent = (opponent.currentHP / opponent.maxHP) * 100;
         const catchRate = (opponent.maxHP - opponent.currentHP) / opponent.maxHP;
-        const success = Math.random() < (0.3 + catchRate * 0.5);
+        
+        let baseChance, multiplier;
+        
+        // Red HP (10% or below) - much easier to catch
+        if (hpPercent <= 10) {
+            baseChance = 0.4;
+            multiplier = 0.6;
+        }
+        // Yellow HP (33.33% or below) - easier to catch
+        else if (hpPercent <= 33.33) {
+            baseChance = 0.25;
+            multiplier = 0.5;
+        }
+        // Green HP (above 33.33%) - normal catch rate
+        else {
+            baseChance = 0.1;
+            multiplier = 0.3;
+        }
+        
+        const success = Math.random() < (baseChance + catchRate * multiplier);
 
         if (success) {
             // Add to party if space available
             if (this.playerParty.length < 6) {
-                this.playerParty.push({
-                    ...opponent,
-                    currentHP: Math.floor(opponent.maxHP * 0.5) // Heal to 50% when caught
-                });
-                return { success: true, message: `You caught ${opponent.name}!` };
+                // Convert recruiter to random applicant status with user moves
+                const randomApplicantStatus = APPLICANT_STATUSES[Math.floor(Math.random() * APPLICANT_STATUSES.length)];
+                const userPokemon = this.createPokemon(randomApplicantStatus, opponent.level, opponent.gender, false); // false = user/interviewee
+                userPokemon.currentHP = Math.floor(userPokemon.maxHP * 0.5); // Heal to 50% when caught
+                this.playerParty.push(userPokemon);
+                return { success: true, message: `You caught ${randomApplicantStatus}!` };
             } else {
                 return { success: false, message: "Your party is full! Release a Pokémon first." };
             }
@@ -644,5 +824,5 @@ class GameState {
 
 // Export for use in script.js
 if (typeof module !== 'undefined' && module.exports) {
-    module.exports = { GameState, POKEMON_DATABASE, MOVE_DATABASE, TYPE_SYMBOLS };
+    module.exports = { GameState, POKEMON_DATABASE, APPLICANT_DATABASE, MOVE_DATABASE, TYPE_SYMBOLS };
 }

@@ -2,7 +2,7 @@
 
 let gameState = new GameState();
 let currentActionCursor = -1; // -1 means no button selected initially
-let currentMoveCursor = 0;
+let currentMoveCursor = -1; // -1 means no move selected initially
 let currentPartyCursor = 0;
 let isProcessing = false;
 let typingTimeout = null; // Track typing effect timeout
@@ -39,6 +39,40 @@ function typeText(element, text, speed = 30, callback = null) {
     type();
 }
 
+// Trigger spawn animations for new battle
+function triggerSpawnAnimations() {
+    const opponentSprite = document.getElementById('opponentSprite');
+    const playerSprite = document.getElementById('playerSprite');
+    const opponentInfo = document.getElementById('opponentInfo');
+    const playerInfo = document.getElementById('playerInfo');
+    
+    // Remove any existing spawn classes
+    opponentSprite.classList.remove('spawning');
+    playerSprite.classList.remove('spawning');
+    opponentInfo.classList.remove('spawning');
+    playerInfo.classList.remove('spawning');
+    
+    // Force reflow to restart animation
+    void opponentSprite.offsetWidth;
+    void playerSprite.offsetWidth;
+    void opponentInfo.offsetWidth;
+    void playerInfo.offsetWidth;
+    
+    // Add spawn classes
+    opponentSprite.classList.add('spawning');
+    playerSprite.classList.add('spawning');
+    opponentInfo.classList.add('spawning');
+    playerInfo.classList.add('spawning');
+    
+    // Remove classes after animation completes
+    setTimeout(() => {
+        opponentSprite.classList.remove('spawning');
+        playerSprite.classList.remove('spawning');
+        opponentInfo.classList.remove('spawning');
+        playerInfo.classList.remove('spawning');
+    }, 500);
+}
+
 // Show battle start message with typing effect
 function showBattleStartMessage() {
     const commentatingText = document.getElementById('commentatingText');
@@ -48,13 +82,12 @@ function showBattleStartMessage() {
     
     const player = gameState.getCurrentPlayerPokemon();
     const opponent = battle.opponent;
-    const role = opponent.role || 'Employee';
-    const opponentCompany = opponent.name;
-    const playerCompany = player.name;
+    // Get the company name from the species (opponent.name is "Recruiter from [Company]")
+    const opponentCompany = opponent.species;
+    const playerStatus = player.name; // Player is now an applicant status, not a company
     
-    // Use "An" for roles starting with vowels, "A" for consonants
-    const article = /^[aeiouAEIOU]/.test(role) ? 'An' : 'A';
-    const message = `${article} ${role} from ${opponentCompany} appears! What can you do with ${playerCompany} experience with ${opponentCompany}?`;
+    // Always use "A recruiter from [company]"
+    const message = `A recruiter from ${opponentCompany} appears! Can you, as ${playerStatus}, land this job?`;
     
     typeText(commentatingText, message, 30);
 }
@@ -171,6 +204,7 @@ function setupEventListeners() {
         document.getElementById('resultsOverlay').style.display = 'none';
         gameState.startNewBattle();
         updateUI();
+        triggerSpawnAnimations();
         showBattleStartMessage();
     });
     document.getElementById('restartResultsBtn').addEventListener('click', () => restartGame());
@@ -236,15 +270,25 @@ function handleMoveMenuKeyboard(e) {
     
     if (e.key === 'ArrowUp') {
         e.preventDefault();
-        currentMoveCursor = Math.max(0, currentMoveCursor - 1);
+        if (currentMoveCursor === -1) {
+            currentMoveCursor = moves.length - 1;
+        } else {
+            currentMoveCursor = Math.max(0, currentMoveCursor - 1);
+        }
         updateMoveMenuCursor();
     } else if (e.key === 'ArrowDown') {
         e.preventDefault();
-        currentMoveCursor = Math.min(moves.length - 1, currentMoveCursor + 1);
+        if (currentMoveCursor === -1) {
+            currentMoveCursor = 0;
+        } else {
+            currentMoveCursor = Math.min(moves.length - 1, currentMoveCursor + 1);
+        }
         updateMoveMenuCursor();
     } else if (e.key === 'Enter' || e.key === ' ') {
         e.preventDefault();
-        selectMove(currentMoveCursor);
+        if (currentMoveCursor >= 0 && currentMoveCursor < moves.length) {
+            selectMove(currentMoveCursor);
+        }
     } else if (e.key === 'Escape' || e.key === 'Backspace') {
         e.preventDefault();
         closeMoveMenu();
@@ -301,6 +345,13 @@ function updateMoveMenuCursor() {
             item.classList.remove('selected');
         }
     });
+    
+    // If no move is selected, ensure all are unselected
+    if (currentMoveCursor === -1) {
+        moveItems.forEach((item) => {
+            item.classList.remove('selected');
+        });
+    }
 }
 
 function updatePartyMenuCursor() {
@@ -346,9 +397,11 @@ function showMoveMenu() {
     playerPokemon.moves.forEach((move, index) => {
         const moveItem = document.createElement('div');
         moveItem.className = 'move-item';
-        if (index === currentMoveCursor) {
-            moveItem.classList.add('selected');
-        }
+        // Don't preselect any move - start with no selection
+        
+        const moveCursor = document.createElement('span');
+        moveCursor.className = 'move-cursor';
+        moveCursor.textContent = '▶';
         
         const moveInfo = document.createElement('div');
         moveInfo.className = 'move-info';
@@ -357,19 +410,8 @@ function showMoveMenu() {
         moveName.className = 'move-name';
         moveName.textContent = move.name;
         
-        const moveDetails = document.createElement('div');
-        moveDetails.className = 'move-details';
-        
-        const typeSymbol = TYPE_SYMBOLS[move.type] || '⭐';
-        moveDetails.innerHTML = `
-            <span class="move-type">${typeSymbol} ${move.type.toUpperCase()}</span>
-            <span>PP ${move.currentPP}/${move.pp}</span>
-            ${move.power > 0 ? `<span>Power ${move.power}</span>` : ''}
-            <span>Acc ${move.accuracy}%</span>
-        `;
-        
         moveInfo.appendChild(moveName);
-        moveInfo.appendChild(moveDetails);
+        moveItem.appendChild(moveCursor);
         moveItem.appendChild(moveInfo);
         
         moveItem.addEventListener('click', () => {
@@ -385,7 +427,7 @@ function showMoveMenu() {
 function closeMoveMenu() {
     document.getElementById('moveMenu').style.display = 'none';
     document.getElementById('actionMenu').style.display = 'flex';
-    currentMoveCursor = 0;
+    currentMoveCursor = -1; // Reset to no selection
 }
 
 function selectMove(moveIndex) {
@@ -426,12 +468,14 @@ function selectMove(moveIndex) {
                         showBattleMessage(`${player.name} grew from Level ${oldLevel} to Level ${player.level}!`, () => {
                             gameState.startNewBattle();
                             updateUI();
+                            triggerSpawnAnimations();
                             showBattleStartMessage();
                             isProcessing = false;
                         });
                     } else {
                         gameState.startNewBattle();
                         updateUI();
+                        triggerSpawnAnimations();
                         showBattleStartMessage();
                         isProcessing = false;
                     }
@@ -551,6 +595,7 @@ function handleBallAction() {
                 if (result.success) {
                     gameState.startNewBattle();
                     updateUI();
+                    triggerSpawnAnimations();
                     showBattleStartMessage();
                     isProcessing = false;
                 } else {
@@ -611,6 +656,7 @@ function handleBallAction() {
                                         } else {
                                             gameState.startNewBattle();
                                             updateUI();
+                                            triggerSpawnAnimations();
                                             showBattleStartMessage();
                                             isProcessing = false;
                                         }
@@ -649,10 +695,11 @@ function handleRunAction() {
     
     isProcessing = true;
     const result = gameState.attemptRun();
-    showMessage(result.message, () => {
+    showBattleMessage(result.message, () => {
         if (result.success) {
             gameState.startNewBattle();
             updateUI();
+            triggerSpawnAnimations();
             showBattleStartMessage();
         }
         updateUI();
@@ -690,16 +737,44 @@ function showPartyMenu(required = false) {
         const sprite = document.createElement('div');
         sprite.className = 'party-sprite';
         
+        // Set logo image for party sprite
+        const applicantData = typeof APPLICANT_DATABASE !== 'undefined' ? APPLICANT_DATABASE[pokemon.name] : null;
+        const companyData = typeof POKEMON_DATABASE !== 'undefined' ? POKEMON_DATABASE[pokemon.name] : null;
+        const pokemonData = applicantData || companyData;
+        
+        if (pokemonData && pokemonData.logo) {
+            const logoPath = pokemonData.logo;
+            sprite.style.backgroundImage = `url(${logoPath})`;
+            sprite.style.backgroundSize = 'cover';
+            sprite.style.backgroundRepeat = 'no-repeat';
+            sprite.style.backgroundPosition = 'center';
+            sprite.style.backgroundColor = '#ffffff';
+        }
+        
         const info = document.createElement('div');
         info.className = 'party-info';
         
         const nameRow = document.createElement('div');
         nameRow.className = 'party-name-row';
-        nameRow.innerHTML = `
-            <span class="party-name">${pokemon.name}</span>
-            <span class="gender-symbol">${pokemon.gender}</span>
-            <span class="party-level">Lv. ${pokemon.level}</span>
-        `;
+        
+        const partyName = document.createElement('span');
+        partyName.className = 'party-name';
+        partyName.textContent = pokemon.name;
+        
+        const genderSymbol = document.createElement('span');
+        genderSymbol.className = 'gender-symbol';
+        if (pokemon.gender === '♀') {
+            genderSymbol.classList.add('female');
+        }
+        genderSymbol.textContent = pokemon.gender;
+        
+        const partyLevel = document.createElement('span');
+        partyLevel.className = 'party-level';
+        partyLevel.textContent = `Lv. ${pokemon.level}`;
+        
+        nameRow.appendChild(partyName);
+        nameRow.appendChild(genderSymbol);
+        nameRow.appendChild(partyLevel);
         
         const hpBar = document.createElement('div');
         hpBar.className = 'party-hp-bar';
@@ -707,6 +782,12 @@ function showPartyMenu(required = false) {
         hpFill.className = 'party-hp-fill';
         const hpPercent = (pokemon.currentHP / pokemon.maxHP) * 100;
         hpFill.style.width = `${hpPercent}%`;
+        // Update HP bar color based on percentage
+        if (hpPercent <= 10) {
+            hpFill.classList.add('red');
+        } else if (hpPercent <= 33.33) {
+            hpFill.classList.add('yellow');
+        }
         hpBar.appendChild(hpFill);
         
         const hpText = document.createElement('div');
@@ -751,7 +832,7 @@ function closePartyMenu() {
 function selectPartyMember(index) {
     const pokemon = gameState.playerParty[index];
     if (pokemon.currentHP <= 0) {
-        showMessage(`${pokemon.name} is fainted and can't battle!`);
+        showBattleMessage(`${pokemon.name} is fainted and can't battle!`);
         return;
     }
     
@@ -805,14 +886,19 @@ function updateUI() {
     
     if (!player || !opponent || !battle) return;
     
-    // Update player sprite with company logo
+    // Update player sprite with applicant photo (from logos folder - user will replace with people photos)
     const playerSprite = document.getElementById('playerSprite');
     const playerPlaceholder = playerSprite.querySelector('.pokemon-placeholder');
     if (playerPlaceholder) {
-        if (typeof POKEMON_DATABASE !== 'undefined' && POKEMON_DATABASE[player.name] && POKEMON_DATABASE[player.name].logo) {
-            const logoPath = POKEMON_DATABASE[player.name].logo;
+        // Check applicant database first (for player), then company database (for caught recruiters)
+        const applicantData = typeof APPLICANT_DATABASE !== 'undefined' ? APPLICANT_DATABASE[player.name] : null;
+        const companyData = typeof POKEMON_DATABASE !== 'undefined' ? POKEMON_DATABASE[player.name] : null;
+        const playerData = applicantData || companyData;
+        
+        if (playerData && playerData.logo) {
+            const logoPath = playerData.logo;
             playerPlaceholder.style.backgroundImage = `url(${logoPath})`;
-            playerPlaceholder.style.backgroundSize = 'contain';
+            playerPlaceholder.style.backgroundSize = '120%';
             playerPlaceholder.style.backgroundRepeat = 'no-repeat';
             playerPlaceholder.style.backgroundPosition = 'center';
         } else {
@@ -825,10 +911,11 @@ function updateUI() {
     const opponentSprite = document.getElementById('opponentSprite');
     const opponentPlaceholder = opponentSprite.querySelector('.pokemon-placeholder');
     if (opponentPlaceholder) {
-        if (typeof POKEMON_DATABASE !== 'undefined' && POKEMON_DATABASE[opponent.name] && POKEMON_DATABASE[opponent.name].logo) {
-            const logoPath = POKEMON_DATABASE[opponent.name].logo;
+        // Use opponent.species for database lookup since opponent.name is now "Recruiter from [Company]"
+        if (typeof POKEMON_DATABASE !== 'undefined' && POKEMON_DATABASE[opponent.species] && POKEMON_DATABASE[opponent.species].logo) {
+            const logoPath = POKEMON_DATABASE[opponent.species].logo;
             opponentPlaceholder.style.backgroundImage = `url(${logoPath})`;
-            opponentPlaceholder.style.backgroundSize = 'contain';
+            opponentPlaceholder.style.backgroundSize = '120%';
             opponentPlaceholder.style.backgroundRepeat = 'no-repeat';
             opponentPlaceholder.style.backgroundPosition = 'center';
         } else {
@@ -839,11 +926,21 @@ function updateUI() {
     
     // Update player info
     document.getElementById('playerName').textContent = player.name;
-    document.getElementById('playerGender').textContent = player.gender;
+    const playerGenderEl = document.getElementById('playerGender');
+    playerGenderEl.textContent = player.gender;
+    playerGenderEl.classList.toggle('female', player.gender === '♀');
     document.getElementById('playerLevel').textContent = player.level;
     
     const playerHpPercent = (player.currentHP / player.maxHP) * 100;
-    document.getElementById('playerHpFill').style.width = `${playerHpPercent}%`;
+    const playerHpFill = document.getElementById('playerHpFill');
+    playerHpFill.style.width = `${playerHpPercent}%`;
+    // Update HP bar color based on percentage
+    playerHpFill.classList.remove('yellow', 'red');
+    if (playerHpPercent <= 10) {
+        playerHpFill.classList.add('red');
+    } else if (playerHpPercent <= 33.33) {
+        playerHpFill.classList.add('yellow');
+    }
     document.getElementById('playerHpText').textContent = `HP ${player.currentHP}/${player.maxHP}`;
     
     const playerExpPercent = (player.exp / player.expToNext) * 100;
@@ -852,11 +949,21 @@ function updateUI() {
     
     // Update opponent info
     document.getElementById('opponentName').textContent = opponent.name;
-    document.getElementById('opponentGender').textContent = opponent.gender;
+    const opponentGenderEl = document.getElementById('opponentGender');
+    opponentGenderEl.textContent = opponent.gender;
+    opponentGenderEl.classList.toggle('female', opponent.gender === '♀');
     document.getElementById('opponentLevel').textContent = opponent.level;
     
     const opponentHpPercent = (opponent.currentHP / opponent.maxHP) * 100;
-    document.getElementById('opponentHpFill').style.width = `${opponentHpPercent}%`;
+    const opponentHpFill = document.getElementById('opponentHpFill');
+    opponentHpFill.style.width = `${opponentHpPercent}%`;
+    // Update HP bar color based on percentage
+    opponentHpFill.classList.remove('yellow', 'red');
+    if (opponentHpPercent <= 10) {
+        opponentHpFill.classList.add('red');
+    } else if (opponentHpPercent <= 33.33) {
+        opponentHpFill.classList.add('yellow');
+    }
     document.getElementById('opponentHpText').textContent = `HP ${opponent.currentHP}/${opponent.maxHP}`;
     
     // Update action prompt
@@ -892,6 +999,7 @@ function startGame() {
     // Initialize game
     gameState.initGame();
     updateUI();
+    triggerSpawnAnimations();
     showBattleStartMessage();
 }
 
